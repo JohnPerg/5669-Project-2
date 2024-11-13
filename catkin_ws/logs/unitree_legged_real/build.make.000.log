@@ -1,0 +1,84 @@
+[35m[1mScanning dependencies of target rosgraph_msgs_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target sensor_msgs_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target sensor_msgs_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target rosgraph_msgs_generate_messages_eus[0m
+[35m[1mScanning dependencies of target roscpp_generate_messages_nodejs[0m
+[35m[1mScanning dependencies of target sensor_msgs_generate_messages_nodejs[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_eus[0m
+[35m[1mScanning dependencies of target unitree_legged_msgs_generate_messages_nodejs[0m
+[  0%] Built target rosgraph_msgs_generate_messages_cpp
+[  0%] Built target rosgraph_msgs_generate_messages_eus
+[  0%] Built target sensor_msgs_generate_messages_nodejs
+[  0%] Built target sensor_msgs_generate_messages_cpp
+[  0%] Built target std_msgs_generate_messages_eus
+[  0%] Built target roscpp_generate_messages_nodejs
+[  0%] Built target sensor_msgs_generate_messages_lisp
+[  0%] Built target unitree_legged_msgs_generate_messages_nodejs
+[35m[1mScanning dependencies of target geometry_msgs_generate_messages_nodejs[0m
+[35m[1mScanning dependencies of target roscpp_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target geometry_msgs_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target geometry_msgs_generate_messages_py[0m
+[35m[1mScanning dependencies of target roscpp_generate_messages_eus[0m
+[35m[1mScanning dependencies of target roscpp_generate_messages_py[0m
+[35m[1mScanning dependencies of target sensor_msgs_generate_messages_eus[0m
+[35m[1mScanning dependencies of target sensor_msgs_generate_messages_py[0m
+[  0%] Built target geometry_msgs_generate_messages_nodejs
+[  0%] Built target roscpp_generate_messages_cpp
+[  0%] Built target geometry_msgs_generate_messages_py
+[  0%] Built target geometry_msgs_generate_messages_lisp
+[  0%] Built target roscpp_generate_messages_py
+[  0%] Built target roscpp_generate_messages_eus
+[  0%] Built target sensor_msgs_generate_messages_eus
+[  0%] Built target sensor_msgs_generate_messages_py
+[35m[1mScanning dependencies of target rosgraph_msgs_generate_messages_py[0m
+[35m[1mScanning dependencies of target rosgraph_msgs_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target unitree_legged_msgs_generate_messages_py[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_py[0m
+[35m[1mScanning dependencies of target rosgraph_msgs_generate_messages_nodejs[0m
+[35m[1mScanning dependencies of target std_msgs_generate_messages_nodejs[0m
+[  0%] Built target rosgraph_msgs_generate_messages_py
+[  0%] Built target rosgraph_msgs_generate_messages_lisp
+[  0%] Built target std_msgs_generate_messages_cpp
+[  0%] Built target std_msgs_generate_messages_lisp
+[  0%] Built target unitree_legged_msgs_generate_messages_py
+[  0%] Built target rosgraph_msgs_generate_messages_nodejs
+[  0%] Built target std_msgs_generate_messages_py
+[  0%] Built target std_msgs_generate_messages_nodejs
+[35m[1mScanning dependencies of target geometry_msgs_generate_messages_eus[0m
+[35m[1mScanning dependencies of target unitree_legged_msgs_generate_messages_cpp[0m
+[35m[1mScanning dependencies of target roscpp_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target unitree_legged_msgs_generate_messages_eus[0m
+[35m[1mScanning dependencies of target unitree_legged_msgs_generate_messages_lisp[0m
+[35m[1mScanning dependencies of target geometry_msgs_generate_messages_cpp[0m
+[  0%] Built target geometry_msgs_generate_messages_eus
+[  0%] Built target unitree_legged_msgs_generate_messages_cpp
+[  0%] Built target unitree_legged_msgs_generate_messages_eus
+[  0%] Built target roscpp_generate_messages_lisp
+[  0%] Built target unitree_legged_msgs_generate_messages_lisp
+[  0%] Built target geometry_msgs_generate_messages_cpp
+[35m[1mScanning dependencies of target ros_udp[0m
+[35m[1mScanning dependencies of target control_via_keyboard[0m
+[35m[1mScanning dependencies of target ros_example_position[0m
+[35m[1mScanning dependencies of target twist_sub[0m
+[35m[1mScanning dependencies of target state_sub[0m
+[35m[1mScanning dependencies of target ros_example_walk[0m
+[  8%] [32mBuilding CXX object CMakeFiles/state_sub.dir/src/exe/state_sub.cpp.o[0m
+[ 16%] [32mBuilding CXX object CMakeFiles/control_via_keyboard.dir/src/exe/control_via_keyboard.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/ros_example_position.dir/src/exe/example_position.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/ros_example_walk.dir/src/exe/example_walk.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/twist_sub.dir/src/exe/twist_sub.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/ros_udp.dir/src/exe/ros_udp.cpp.o[0m
+[ 58%] [32m[1mLinking CXX executable /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/lib/unitree_legged_real/control_via_keyboard[0m
+[ 58%] Built target control_via_keyboard
+[ 66%] [32m[1mLinking CXX executable /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/lib/unitree_legged_real/ros_example_position[0m
+[ 75%] [32m[1mLinking CXX executable /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/lib/unitree_legged_real/ros_example_walk[0m
+[ 75%] Built target ros_example_position
+[ 75%] Built target ros_example_walk
+[ 83%] [32m[1mLinking CXX executable /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/lib/unitree_legged_real/state_sub[0m
+[ 91%] [32m[1mLinking CXX executable /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/lib/unitree_legged_real/twist_sub[0m
+[ 91%] Built target state_sub
+[ 91%] Built target twist_sub
+[100%] [32m[1mLinking CXX executable /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/lib/unitree_legged_real/ros_udp[0m
+[100%] Built target ros_udp

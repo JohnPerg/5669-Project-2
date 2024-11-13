@@ -1,0 +1,27 @@
+Symlinking /home/johnperg/catkin_ws/devel/share/laikago_description/cmake/laikago_descriptionConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/laikago_description/cmake/laikago_descriptionConfig-version.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/unitree_legged_control/cmake/unitree_legged_controlConfig-version.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/unitree_legged_control/cmake/unitree_legged_controlConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/a1_description/cmake/a1_descriptionConfig-version.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/a1_description/cmake/a1_descriptionConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/go1_description/cmake/go1_descriptionConfig-version.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/go1_description/cmake/go1_descriptionConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/unitree_legged_sdk/cmake/unitree_legged_sdkConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/unitree_legged_sdk/cmake/unitree_legged_sdkConfig-version.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/b1_description/cmake/b1_descriptionConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/b1_description/cmake/b1_descriptionConfig-version.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/aliengo_description/cmake/aliengo_descriptionConfig.cmake
+Symlinking /home/johnperg/catkin_ws/devel/share/aliengo_description/cmake/aliengo_descriptionConfig-version.cmake
+Warning: Cannot symlink from /home/johnperg/catkin_ws/devel/.private/unitree_legged_sdk/share/unitree_legged_msgs/cmake/unitree_legged_msgsConfig.cmake to existing file /home/johnperg/catkin_ws/devel/share/unitree_legged_msgs/cmake/unitree_legged_msgsConfig.cmake
+Warning: Source hash: d0d03e7e5ee89638afddce8d3388fcb1
+Warning: Dest hash: 408fd483671c92f6ff5e93c3c8d4c705
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/aliengo_description.pc
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/go1_description.pc
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/unitree_legged_control.pc
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/unitree_legged_sdk.pc
+Warning: Cannot symlink from /home/johnperg/catkin_ws/devel/.private/unitree_legged_sdk/lib/pkgconfig/unitree_legged_msgs.pc to existing file /home/johnperg/catkin_ws/devel/lib/pkgconfig/unitree_legged_msgs.pc
+Warning: Source hash: 6ab889589887a72815457c4df75f10b8
+Warning: Dest hash: e5d0a81fc4852769f0479985687f34bf
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/b1_description.pc
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/laikago_description.pc
+Symlinking /home/johnperg/catkin_ws/devel/lib/pkgconfig/a1_description.pc

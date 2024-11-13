@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/johnperg/catkin_ws/devel/.private/unitree_legged_real/setup.sh

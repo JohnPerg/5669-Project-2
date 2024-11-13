@@ -1,0 +1,20 @@
+[35m[1mScanning dependencies of target example_joystick[0m
+[35m[1mScanning dependencies of target example_position[0m
+[35m[1mScanning dependencies of target example_torque[0m
+[35m[1mScanning dependencies of target example_velocity[0m
+[35m[1mScanning dependencies of target example_walk[0m
+[ 10%] [32mBuilding CXX object CMakeFiles/example_velocity.dir/example/example_velocity.cpp.o[0m
+[ 20%] [32mBuilding CXX object CMakeFiles/example_joystick.dir/example/example_joystick.cpp.o[0m
+[ 30%] [32mBuilding CXX object CMakeFiles/example_torque.dir/example/example_torque.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/example_position.dir/example/example_position.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/example_walk.dir/example/example_walk.cpp.o[0m
+[ 60%] [32m[1mLinking CXX executable example_torque[0m
+[ 70%] [32m[1mLinking CXX executable example_walk[0m
+[ 80%] [32m[1mLinking CXX executable example_velocity[0m
+[ 90%] [32m[1mLinking CXX executable example_joystick[0m
+[100%] [32m[1mLinking CXX executable example_position[0m
+[100%] Built target example_torque
+[100%] Built target example_walk
+[100%] Built target example_joystick
+[100%] Built target example_position
+[100%] Built target example_velocity
