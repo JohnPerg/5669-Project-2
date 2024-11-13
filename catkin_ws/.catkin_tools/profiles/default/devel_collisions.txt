@@ -1,7 +1,0 @@
-/home/johnperg/catkin_ws/devel/./cmake.lock 6
-/home/johnperg/catkin_ws/devel/share/unitree_legged_msgs/cmake/unitree_legged_msgsConfig-version.cmake 1
-/home/johnperg/catkin_ws/devel/share/unitree_legged_msgs/cmake/unitree_legged_msgs-msg-extras.cmake 1
-/home/johnperg/catkin_ws/devel/share/unitree_legged_msgs/cmake/unitree_legged_msgs-msg-paths.cmake 1
-/home/johnperg/catkin_ws/devel/share/unitree_legged_msgs/cmake/unitree_legged_msgsConfig.cmake 1
-/home/johnperg/catkin_ws/devel/lib/python3/dist-packages/unitree_legged_msgs/__init__.py 1
-/home/johnperg/catkin_ws/devel/lib/pkgconfig/unitree_legged_msgs.pc 1

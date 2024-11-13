@@ -1,8 +1,0 @@
-prefix=/home/johnperg/catkin_ws/devel/.private/unitree_legged_sdk
-
-Name: a1_description
-Description: Description of a1_description
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
