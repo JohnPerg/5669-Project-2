@@ -40,7 +40,7 @@ def generate_sinusoidal_trajectory(
     for t in time_array:
         point = JointTrajectoryPoint()
         positions = []
-
+        velocities = []
         # Compute positions for each joint
         for i in range(len(joint_names)):
             # Generate only joint positions. No FF for velocity provided in this utility currently
@@ -50,7 +50,12 @@ def generate_sinusoidal_trajectory(
             )
             positions.append(position)
 
+            # Velocity (derivative of position)
+            velocity = 2 * np.pi * frequencies[i] * amplitudes[i] * np.cos(2 * np.pi * frequencies[i] * t + phases[i])
+            velocities.append(velocity)
+
         point.positions = positions
+        point.velocities = velocities
         point.time_from_start = rospy.Duration(t - time_array[0])
         traj_msg.points.append(point)
 
@@ -76,7 +81,7 @@ def main():
     ]
 
     # Currently just specify the frequency for each joint
-    frequencies = [1.0 for j in joint_names]  # Frequency for each joint in Hz
+    frequencies = [0.1 for j in joint_names]  # Frequency for each joint in Hz
 
     # Make each sinusoid in the same phase
     phases = [0.0 for j in joint_names]  # Phase for each joint in radians
@@ -87,8 +92,8 @@ def main():
         for i, j in enumerate(joint_names)
     ]
     duration = 1.0  # Total duration of the trajectory in seconds
-    rate_hz = 10  # Frequency at which points are generated
-    pub_rate_hz = 1  # Frequency at which trajectories are updated
+    rate_hz = 100  # Frequency at which points are generated
+    pub_rate_hz = 10  # Frequency at which trajectories are updated
 
     rate = rospy.Rate(pub_rate_hz)
     while not rospy.is_shutdown():
