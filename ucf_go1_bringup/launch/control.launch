@@ -1,7 +1,11 @@
 <launch>
     <arg name="gait" default ="3"/>
+    <arg name="profile" default ="SymmetricHump.csv"/>
+
     <!-- Define a parameter -->
     <param name="gait" value="$(arg gait)" />
+    <param name="profile" value="$(arg profile)" />
+
     <!-- Launch a node with access to the parameter -->
     <remap from="command" to="/go1_gazebo/traj_controller/command"/>
     <remap from="joint_state" to="/go1_gazebo/go1_gazebo/joint_states"/>

@@ -58,7 +58,7 @@ std::array<nav_msgs::Path, 4> BodyController::getFootPos(const geometry_msgs::Tw
 
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto ts = ros::Time::now();
-  double duration = 5.0;
+  double duration = 2.0;
 
   for (int legId = 0; legId < footPhase_.size(); ++legId) {
     double legPhase = footPhase_[legId];
@@ -73,26 +73,26 @@ std::array<nav_msgs::Path, 4> BodyController::getFootPos(const geometry_msgs::Tw
     }
   }
   // Loop overall phase to keep it between [0,1)
-  currentPhase_ = fmod(currentPhase_ + (1/(duration*10)), 1.0);
+  currentPhase_ = fmod(currentPhase_ + (1/(duration*50)), 1.0);
 
   // Shift for proper frame (rel body frame)
   for (auto &pose : footPaths[kLegFL].poses) {
-    pose.pose.position.x += 0.1881;
+    pose.pose.position.x += 0.1681;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
   for (auto &pose : footPaths[kLegFR].poses) {
-    pose.pose.position.x += 0.1881;
+    pose.pose.position.x += 0.1681;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;
   }
   for (auto &pose : footPaths[kLegRL].poses) {
-    pose.pose.position.x += -0.1881;
+    pose.pose.position.x += -0.2081;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
   for (auto &pose : footPaths[kLegRR].poses) {
-    pose.pose.position.x += -0.1881;
+    pose.pose.position.x += -0.2081;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;
   }

@@ -10,6 +10,7 @@ project(ucf_go1_control)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
+  roslib
   sensor_msgs
   std_msgs
   trajectory_msgs
@@ -47,7 +48,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include third-party/unitree_guide/include
  LIBRARIES ucf_go1_control
- CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs std_msgs trajectory_msgs
+ CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs std_msgs trajectory_msgs roslib
 #  DEPENDS system_lib
 )
 
@@ -145,11 +146,9 @@ install(DIRECTORY third-party/unitree_guide/include/
 
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(DIRECTORY profiles/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/profiles
+)
 
 #############
 ## Testing ##

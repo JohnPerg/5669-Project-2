@@ -7,9 +7,10 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <ros/package.h>
 
 #include "ucf_go1_control/body_controller.h"
-
+#include "ucf_go1_control/csv_loader.h"
 // Make a simple cycloidal profile for testing purposes
 // Phase should be [0,1). A complete Cycloid profile
 // and the closed base is generated over 100 total steps. 50 are in the base
@@ -22,26 +23,43 @@ nav_msgs::Path makeCycloid() {
 
   double kHeight = 0.1;
   double kHeightOffset = -0.225;
-  double kStepLength = 0.075;
+  double kStepLength = 0.1;
   int steps = 100;
-  int kSwingSteps = 50;
-  for (int t = 0; t < steps; ++t) {
+  int kSwingSteps = 25;
+  for (int t = 0; t < kSwingSteps; ++t) {
     geometry_msgs::PoseStamped pose;
-    float phasePI = 2 * M_PI * t / steps;
+    float phasePI = 2 * M_PI * t / kSwingSteps;
     pose.header.frame_id = "base";
-    pose.pose.position.x = -kStepLength + 2*kStepLength * (phasePI - sin(phasePI)) / (2 * M_PI);
+    pose.pose.position.x = -kStepLength + 2 * kStepLength * (phasePI - sin(phasePI)) / (2 * M_PI);
     pose.pose.position.z = kHeight * (1 - cos(phasePI)) / 2 + kHeightOffset;
     cycloidPath.poses.push_back(pose);
   }
   int kContactSteps = steps - kSwingSteps;
-  for (int t = kContactSteps; t < steps; ++t) {
+  for (int t = kSwingSteps; t < steps; ++t) {
     geometry_msgs::PoseStamped pose;
     pose.header.frame_id = "base";
-    pose.pose.position.x = -kStepLength + 2*kStepLength * (steps - t) / kContactSteps;
+    pose.pose.position.x = -kStepLength + 2 * kStepLength * (steps - t) / kContactSteps;
     pose.pose.position.z = kHeightOffset;
     cycloidPath.poses.push_back(pose);
   }
   return cycloidPath;
+}
+
+nav_msgs::Path makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
+  nav_msgs::Path path;
+  path.header.frame_id = "base";
+  for (const auto &line : parsedCsv) {
+    double Y, Z, Vy, Vz;
+    Y = std::stod(line[0]);
+    Z = std::stod(line[1]);
+    Vy = std::stod(line[2]);
+    Vz = std::stod(line[3]);
+    geometry_msgs::PoseStamped pose{};
+    pose.pose.position.x = Z;
+    pose.pose.position.z = Y; // Y Was up in csv
+    path.poses.push_back(pose);
+  }
+  return path;
 }
 
 int main(int argc, char **argv) {
@@ -57,11 +75,27 @@ int main(int argc, char **argv) {
     gait = ucf::BodyController::Gait::kPassive;
   }
 
+  std::string profileStr;
+  if (nh.hasParam("profile")) {
+    nh.getParam("profile", profileStr);
+  }
+
   auto robotModel = std::make_unique<Go1Robot>();
 
   geometry_msgs::Twist currentTwist;
   sensor_msgs::JointState currentState;
-  nav_msgs::Path swingProfile = makeCycloid();
+
+  nav_msgs::Path swingProfile;
+  if (profileStr.empty()) {
+    swingProfile = makeCycloid();
+  } else {
+    auto csv = ucf::loadCSV(ros::package::getPath("ucf_go1_control") + "/profiles/" + profileStr);
+    swingProfile = makeProfileFromCsv(csv);
+    for (auto &pose : swingProfile.poses)
+    {
+      pose.pose.position.z+=0.15;
+    }
+  }
 
   auto bodyController = std::make_unique<ucf::BodyController>(*robotModel, gait, swingProfile);
 
@@ -82,7 +116,7 @@ int main(int argc, char **argv) {
   ros::Publisher pub_profile = nh.advertise<nav_msgs::Path>("path", 1, true);
   pub_profile.publish(swingProfile);
 
-  ros::Rate rate(10);
+  ros::Rate rate(50);
   while (ros::ok()) {
     auto jointTraj = bodyController->getJointTrajectory(currentTwist, currentState);
     pub_traj.publish(jointTraj);
