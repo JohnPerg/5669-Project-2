@@ -1,0 +1,45 @@
+#ifndef __BODY_CONTROLLER_H__
+#define __BODY_CONTROLLER_H__
+
+#include <array>
+
+#include "geometry_msgs/Twist.h"
+#include "nav_msgs/Path.h"
+#include "sensor_msgs/JointState.h"
+#include "trajectory_msgs/JointTrajectory.h"
+
+#include "common/unitreeRobot.h"
+
+namespace ucf {
+/// @brief Provides functionality for calculating joint trajectories from desired twist
+/// and current states. Provides several different gaits as options to execute.
+class BodyController {
+public:
+  enum class Gait { kPassive = 0, kStand, kWalk, kTrot, kCanter, kGallop };
+
+  BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile);
+
+  /// @brief Calculate joint trajectory from current joint state and twist command
+  /// @param twist Desired velocities
+  /// @param jointState Current joint states
+  /// @return Joint trajectories for 12 joints
+  trajectory_msgs::JointTrajectory getJointTrajectory(const geometry_msgs::Twist &twist,
+                                                      const sensor_msgs::JointState &jointState);
+
+protected:
+  /// @brief Get timestamped foot positions for each leg
+  /// @param twist Current velocity
+  /// @param jointState Current joint state
+  /// @return Array of 4 leg timestamped paths
+  std::array<nav_msgs::Path, 4> getFootPos(const geometry_msgs::Twist &twist,
+                                           const sensor_msgs::JointState &jointState);
+
+private:
+  QuadrupedRobot &robotModel_;
+  Gait gait_;
+  nav_msgs::Path swingProfile_;
+  double currentPhase_;
+};
+} // namespace ucf
+
+#endif // __BODY_CONTROLLER_H__
