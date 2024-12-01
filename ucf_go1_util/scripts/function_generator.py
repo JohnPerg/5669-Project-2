@@ -71,7 +71,7 @@ def main():
     joint_names = [
         f"{prefix}_{suffix}_joint"
         for prefix in ["FL", "FR", "RL", "RR"]
-        for suffix in ["calf", "hip", "thigh"]
+        for suffix in ["hip","thigh", "calf"]
     ]
 
     # The amplitude is half the total distance over the joints
