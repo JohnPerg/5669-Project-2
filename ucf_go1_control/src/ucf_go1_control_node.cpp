@@ -20,16 +20,16 @@ nav_msgs::Path makeCycloid() {
   cycloidPath.header.stamp = ts;
   cycloidPath.header.frame_id = "base";
 
-  double kHeight = 0.04;
-  double kHeightOffset = -0.25;
-  double kStepLength = 0.1;
+  double kHeight = 0.1;
+  double kHeightOffset = -0.225;
+  double kStepLength = 0.075;
   int steps = 100;
   int kSwingSteps = 50;
   for (int t = 0; t < steps; ++t) {
     geometry_msgs::PoseStamped pose;
     float phasePI = 2 * M_PI * t / steps;
     pose.header.frame_id = "base";
-    pose.pose.position.x = kStepLength * (phasePI - sin(phasePI)) / (2 * M_PI);
+    pose.pose.position.x = -kStepLength + 2*kStepLength * (phasePI - sin(phasePI)) / (2 * M_PI);
     pose.pose.position.z = kHeight * (1 - cos(phasePI)) / 2 + kHeightOffset;
     cycloidPath.poses.push_back(pose);
   }
@@ -37,7 +37,7 @@ nav_msgs::Path makeCycloid() {
   for (int t = kContactSteps; t < steps; ++t) {
     geometry_msgs::PoseStamped pose;
     pose.header.frame_id = "base";
-    pose.pose.position.x = kStepLength * (steps - t) / kContactSteps;
+    pose.pose.position.x = -kStepLength + 2*kStepLength * (steps - t) / kContactSteps;
     pose.pose.position.z = kHeightOffset;
     cycloidPath.poses.push_back(pose);
   }
@@ -48,14 +48,22 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "ucf_go1_control");
   ros::NodeHandle nh;
 
+  ucf::BodyController::Gait gait;
+  if (nh.hasParam("gait")) {
+    int gaitParam;
+    nh.getParam("gait", gaitParam);
+    gait = static_cast<ucf::BodyController::Gait>(gaitParam);
+  } else {
+    gait = ucf::BodyController::Gait::kPassive;
+  }
+
   auto robotModel = std::make_unique<Go1Robot>();
 
   geometry_msgs::Twist currentTwist;
   sensor_msgs::JointState currentState;
   nav_msgs::Path swingProfile = makeCycloid();
 
-  auto bodyController =
-      std::make_unique<ucf::BodyController>(*robotModel, ucf::BodyController::Gait::kTrot, swingProfile);
+  auto bodyController = std::make_unique<ucf::BodyController>(*robotModel, gait, swingProfile);
 
   ros::Subscriber sub_twist =
       nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, [&currentTwist](const geometry_msgs::Twist::ConstPtr &msg) {

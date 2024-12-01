@@ -58,7 +58,7 @@ std::array<nav_msgs::Path, 4> BodyController::getFootPos(const geometry_msgs::Tw
 
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto ts = ros::Time::now();
-  double duration = 10.0;
+  double duration = 5.0;
 
   for (int legId = 0; legId < footPhase_.size(); ++legId) {
     double legPhase = footPhase_[legId];
