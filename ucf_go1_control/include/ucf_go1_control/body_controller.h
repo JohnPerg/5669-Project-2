@@ -34,11 +34,18 @@ protected:
   std::array<nav_msgs::Path, 4> getFootPos(const geometry_msgs::Twist &twist,
                                            const sensor_msgs::JointState &jointState);
 
+  // some gaits have faster swing phases vs contact phases. This scales them
+  double scalePhase(double phase);
+
+  std::array<double, 4> phaseStateMachine(double phase, BodyController::Gait gait, geometry_msgs::Vector3 comAngle);
+
 private:
   QuadrupedRobot &robotModel_;
   Gait gait_;
   nav_msgs::Path swingProfile_;
   double currentPhase_;
+
+  std::array<double, 4> footPhase_;
 };
 } // namespace ucf
 

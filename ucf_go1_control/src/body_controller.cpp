@@ -2,6 +2,12 @@
 #include <cmath>
 
 using namespace ucf;
+
+const int kLegFL = 0;
+const int kLegFR = 1;
+const int kLegRL = 2;
+const int kLegRR = 3;
+
 BodyController::BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile)
     : robotModel_(robotModel), gait_(gait), swingProfile_(swingProfile), currentPhase_(0.0) {}
 
@@ -50,48 +56,132 @@ std::array<nav_msgs::Path, 4> BodyController::getFootPos(const geometry_msgs::Tw
 
   // TODO: Determine foot path based on twist, jointState, time, and current state machine state
 
-  auto profile = swingProfile_;
+  footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto ts = ros::Time::now();
   double duration = 10.0;
-  int phaseIdx = currentPhase_ * profile.poses.size();
-  for (int i = 0; i < profile.poses.size(); ++i) {
-    auto &pose = profile.poses[i];
-    pose.header.stamp = ts + ros::Duration(duration * i / profile.poses.size());
-    pose.pose = swingProfile_.poses[phaseIdx].pose;
-    // Move phase pointer, looping over the end of the vector
-    phaseIdx = ++phaseIdx % profile.poses.size();
-  }
-  // Loop phase to keep it between [0,1)
-  currentPhase_ = fmod(currentPhase_ + 0.01, 1.0);
 
-  // Initial copy of standard profile
-  // TODO: Get the appropriate phase and duration for each of the legs.
-  footPaths[0] = profile;
-  footPaths[1] = profile;
-  footPaths[2] = profile;
-  footPaths[3] = profile;
+  for (int legId = 0; legId < footPhase_.size(); ++legId) {
+    double legPhase = footPhase_[legId];
+    footPaths[legId] = swingProfile_;
+    int phaseIdx = min(legPhase * swingProfile_.poses.size(), swingProfile_.poses.size() - 1);
+    for (int i = 0; i < swingProfile_.poses.size(); ++i) {
+      auto &pose = footPaths[legId].poses[i];
+      pose.header.stamp = ts + ros::Duration(duration * i / swingProfile_.poses.size());
+      pose.pose = swingProfile_.poses[phaseIdx].pose;
+      // Move phase pointer, looping over the end of the vector
+      phaseIdx = ++phaseIdx % swingProfile_.poses.size();
+    }
+  }
+  // Loop overall phase to keep it between [0,1)
+  currentPhase_ = fmod(currentPhase_ + (1/(duration*10)), 1.0);
 
   // Shift for proper frame (rel body frame)
-  for (auto &pose : footPaths[0].poses) {
+  for (auto &pose : footPaths[kLegFL].poses) {
     pose.pose.position.x += 0.1881;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
-  for (auto &pose : footPaths[1].poses) {
+  for (auto &pose : footPaths[kLegFR].poses) {
     pose.pose.position.x += 0.1881;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;
   }
-  for (auto &pose : footPaths[2].poses) {
+  for (auto &pose : footPaths[kLegRL].poses) {
     pose.pose.position.x += -0.1881;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
-  for (auto &pose : footPaths[3].poses) {
+  for (auto &pose : footPaths[kLegRR].poses) {
     pose.pose.position.x += -0.1881;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;
   }
 
   return footPaths;
+}
+
+double BodyController::scalePhase(double phase) {
+  if (phase < 0.75) {
+    double output_end = 0.50;
+    double output_start = 0.0;
+    double input_end = 0.75;
+    double input_start = 0.0;
+    double slope = 1.0 * (output_end - output_start) / (input_end - input_start);
+    double contactPhase = output_start + slope * (phase - input_start);
+    return contactPhase;
+  } else {
+    double output_end = 1.0;
+    double output_start = 0.5;
+    double input_end = 1.0;
+    double input_start = 0.75;
+    double slope = 1.0 * (output_end - output_start) / (input_end - input_start);
+    double swingPhase = output_start + slope * (phase - input_start);
+    return swingPhase;
+  }
+}
+
+std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyController::Gait gait,
+                                                        geometry_msgs::Vector3 comAngle) {
+  std::array<double, 4> footPhase;
+  switch (gait) {
+  case BodyController::Gait::kPassive: {
+    footPhase[kLegFL] = 0.0;
+    footPhase[kLegFR] = 0.0;
+    footPhase[kLegRL] = 0.0;
+    footPhase[kLegRR] = 0.0;
+    // level out COM
+    comAngle.x = 0.0;
+    comAngle.y = 0.0;
+    break;
+  }
+  case BodyController::Gait::kStand: {
+    footPhase[kLegFL] = 0.0;
+    footPhase[kLegFR] = 0.0;
+    footPhase[kLegRL] = 0.0;
+    footPhase[kLegRR] = 0.0;
+    // level out COM
+    comAngle.x = 0.0;
+    comAngle.y = 0.0;
+    break;
+  }
+  case BodyController::Gait::kWalk: {
+    footPhase[0] = scalePhase(fmod(phase + 0.0, 1.0));
+    footPhase[1] = scalePhase(fmod(phase + 0.5, 1.0));
+    footPhase[2] = scalePhase(fmod(phase + 0.25, 1.0));
+    footPhase[3] = scalePhase(fmod(phase + 0.75, 1.0));
+
+    if (phase < 0.50) { // leans ensure stability on 3 legs
+      // COM lean right
+      comAngle.x = 0.50; // these angles are currently arbitrary
+      comAngle.y = 0.50;
+    } else if (phase >= 0.50) {
+      // COM lean left
+      comAngle.x = -0.50; // these angles are currently arbitrary
+      comAngle.y = -0.50;
+    }
+    break;
+  }
+  case BodyController::Gait::kTrot: {
+    footPhase[kLegFL] = fmod(phase + 0.5, 1.0);
+    footPhase[kLegFR] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegRL] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegRR] = fmod(phase + 0.5, 1.0);
+    break;
+  }
+  case BodyController::Gait::kCanter: {
+    footPhase[kLegFL] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegFR] = fmod(phase + 0.3, 1.0);
+    footPhase[kLegRL] = fmod(phase + 0.7, 1.0);
+    footPhase[kLegRR] = fmod(phase + 0.0, 1.0);
+    break;
+  }
+  case BodyController::Gait::kGallop: {
+    footPhase[kLegFL] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegFR] = fmod(phase + 0.1, 1.0);
+    footPhase[kLegRL] = fmod(phase + 0.6, 1.0);
+    footPhase[kLegRR] = fmod(phase + 0.5, 1.0);
+    break;
+  }
+  }
+  return footPhase;
 }
