@@ -1,6 +1,6 @@
 #include "ucf_go1_control/body_controller.h"
+#include <algorithm>
 #include <cmath>
-
 using namespace ucf;
 
 const int kLegFL = 0;
@@ -8,8 +8,10 @@ const int kLegFR = 1;
 const int kLegRL = 2;
 const int kLegRR = 3;
 
-BodyController::BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile)
-    : robotModel_(robotModel), gait_(gait), swingProfile_(swingProfile), currentPhase_(0.0) {}
+BodyController::BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile,
+                               std::vector<geometry_msgs::Twist> velocityProfile)
+    : robotModel_(robotModel), gait_(gait), swingProfile_(swingProfile), currentPhase_(0.0),
+      velocityProfile_(velocityProfile) {}
 
 trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geometry_msgs::Twist &twist,
                                                                     const sensor_msgs::JointState &jointState) {
@@ -21,14 +23,21 @@ trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geomet
                          "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
                          "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
 
-  auto footPos = this->getFootPos(twist, jointState);
-  trajMsg.points.reserve(footPos[0].poses.size());
-  for (int i = 0; i < footPos[0].poses.size(); ++i) {
+  auto footPosVel = this->getFoot(twist, jointState);
+  trajMsg.points.reserve(footPosVel[0].swingProfile.poses.size());
+  for (int i = 0; i < footPosVel[0].swingProfile.poses.size(); ++i) {
     Vec34 position;
-    for (int j = 0; j < footPos.size(); ++j) {
-      position.col(j)(0) = footPos[j].poses[i].pose.position.x;
-      position.col(j)(1) = footPos[j].poses[i].pose.position.y;
-      position.col(j)(2) = footPos[j].poses[i].pose.position.z;
+    Vec34 velocity;
+    for (int j = 0; j < footPosVel.size(); ++j) {
+      position.col(j)(0) = footPosVel[j].swingProfile.poses[i].pose.position.x;
+      position.col(j)(1) = footPosVel[j].swingProfile.poses[i].pose.position.y;
+      position.col(j)(2) = footPosVel[j].swingProfile.poses[i].pose.position.z;
+
+      if (!velocityProfile_.empty()) {
+        velocity.col(j)(0) = footPosVel[j].velocityProfile[i].linear.x;
+        velocity.col(j)(1) = footPosVel[j].velocityProfile[i].linear.y;
+        velocity.col(j)(2) = footPosVel[j].velocityProfile[i].linear.z;
+      }
     }
     // Do inverse kinematics over all feet positions obtaining 12 joint positions
     auto jointPositions = robotModel_.getQ(position, FrameType::BODY);
@@ -38,21 +47,25 @@ trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geomet
 
     trajectory_msgs::JointTrajectoryPoint point;
     // Time_from_start is already given by the timestamped positions
-    point.time_from_start = footPos[0].poses[i].header.stamp - footPos[0].poses.front().header.stamp;
+    point.time_from_start =
+        footPosVel[0].swingProfile.poses[i].header.stamp - footPosVel[0].swingProfile.poses.front().header.stamp;
     // Copy data from matrix to vector for messaging
     point.positions = std::vector<double>(jointPositions.data(),
                                           jointPositions.data() + jointPositions.rows() * jointPositions.cols());
-
-    // TODO: Velocity FF
+    if (!velocityProfile_.empty()) {
+      auto jointVel = robotModel_.getQd(position, velocity, FrameType::BODY);
+      jointVel = jointVel.unaryExpr([](double x) { return std::isnan(x) ? 0 : x; });
+      point.velocities = std::vector<double>(jointVel.data(), jointVel.data() + jointVel.rows() * jointVel.cols());
+    }
     trajMsg.points.push_back(point);
   }
   return trajMsg;
 }
 
-std::array<nav_msgs::Path, 4> BodyController::getFootPos(const geometry_msgs::Twist &twist,
-                                                         const sensor_msgs::JointState &jointState) {
+std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const geometry_msgs::Twist &twist,
+                                                                        const sensor_msgs::JointState &jointState) {
 
-  std::array<nav_msgs::Path, 4> footPaths;
+  std::array<BodyController::PositionVelocity, 4> footPaths;
 
   // TODO: Determine foot path based on twist, jointState, time, and current state machine state
 
@@ -60,38 +73,55 @@ std::array<nav_msgs::Path, 4> BodyController::getFootPos(const geometry_msgs::Tw
   auto ts = ros::Time::now();
   double duration = 2.0;
 
+  const int kLookaheadSteps = 100;
+
   for (int legId = 0; legId < footPhase_.size(); ++legId) {
     double legPhase = footPhase_[legId];
-    footPaths[legId] = swingProfile_;
+    // Initialize vectors as a copy of the original vector with a specified number of steps for lookahead
+    std::copy_n(swingProfile_.poses.begin(), kLookaheadSteps, std::back_inserter(footPaths[legId].swingProfile.poses));
+    if (!velocityProfile_.empty()) {
+      std::copy_n(velocityProfile_.begin(), kLookaheadSteps, std::back_inserter(footPaths[legId].velocityProfile));
+    }
+
     int phaseIdx = min(legPhase * swingProfile_.poses.size(), swingProfile_.poses.size() - 1);
-    for (int i = 0; i < swingProfile_.poses.size(); ++i) {
-      auto &pose = footPaths[legId].poses[i];
+    for (int i = 0; i < kLookaheadSteps; ++i) {
+      auto &pose = footPaths[legId].swingProfile.poses[i];
       pose.header.stamp = ts + ros::Duration(duration * i / swingProfile_.poses.size());
       pose.pose = swingProfile_.poses[phaseIdx].pose;
+
+      if (!velocityProfile_.empty()) {
+        auto &twist = footPaths[legId].velocityProfile[i];
+        twist = velocityProfile_[phaseIdx];
+        twist.linear.x /= duration;
+        twist.linear.y /= duration;
+        twist.linear.z /= duration;
+      }
+
       // Move phase pointer, looping over the end of the vector
       phaseIdx = ++phaseIdx % swingProfile_.poses.size();
     }
   }
   // Loop overall phase to keep it between [0,1)
-  currentPhase_ = fmod(currentPhase_ + (1/(duration*50)), 1.0);
+  // This 20 needs to be from the publishing rate to progress phase until we track it explicitly
+  currentPhase_ = fmod(currentPhase_ + (1 / (duration * 20)), 1.0);
 
   // Shift for proper frame (rel body frame)
-  for (auto &pose : footPaths[kLegFL].poses) {
+  for (auto &pose : footPaths[kLegFL].swingProfile.poses) {
     pose.pose.position.x += 0.1681;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
-  for (auto &pose : footPaths[kLegFR].poses) {
+  for (auto &pose : footPaths[kLegFR].swingProfile.poses) {
     pose.pose.position.x += 0.1681;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;
   }
-  for (auto &pose : footPaths[kLegRL].poses) {
+  for (auto &pose : footPaths[kLegRL].swingProfile.poses) {
     pose.pose.position.x += -0.2081;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
-  for (auto &pose : footPaths[kLegRR].poses) {
+  for (auto &pose : footPaths[kLegRR].swingProfile.poses) {
     pose.pose.position.x += -0.2081;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;

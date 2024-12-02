@@ -45,8 +45,9 @@ nav_msgs::Path makeCycloid() {
   return cycloidPath;
 }
 
-nav_msgs::Path makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
+std::pair<nav_msgs::Path, std::vector<geometry_msgs::Twist>> makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
   nav_msgs::Path path;
+  std::vector<geometry_msgs::Twist> vel;
   path.header.frame_id = "base";
   for (const auto &line : parsedCsv) {
     double Y, Z, Vy, Vz;
@@ -58,8 +59,12 @@ nav_msgs::Path makeProfileFromCsv(const std::vector<std::vector<std::string>> &p
     pose.pose.position.x = Z;
     pose.pose.position.z = Y; // Y Was up in csv
     path.poses.push_back(pose);
+    geometry_msgs::Twist twist{};
+    twist.linear.y = Vz;
+    twist.linear.z = Vy;
+    vel.push_back(twist);
   }
-  return path;
+  return {path, vel};
 }
 
 int main(int argc, char **argv) {
@@ -86,18 +91,22 @@ int main(int argc, char **argv) {
   sensor_msgs::JointState currentState;
 
   nav_msgs::Path swingProfile;
+  std::vector<geometry_msgs::Twist> velProfile;
   if (profileStr.empty()) {
     swingProfile = makeCycloid();
   } else {
     auto csv = ucf::loadCSV(ros::package::getPath("ucf_go1_control") + "/profiles/" + profileStr);
-    swingProfile = makeProfileFromCsv(csv);
+    auto posVel = makeProfileFromCsv(csv);
+    swingProfile = posVel.first;
+    velProfile = posVel.second;
     for (auto &pose : swingProfile.poses)
     {
-      pose.pose.position.z+=0.15;
+      pose.pose.position.z+=0.15; // Shift profile upward
+      pose.pose.position.x*=1.0; // Scale the step size
     }
   }
 
-  auto bodyController = std::make_unique<ucf::BodyController>(*robotModel, gait, swingProfile);
+  auto bodyController = std::make_unique<ucf::BodyController>(*robotModel, gait, swingProfile, velProfile);
 
   ros::Subscriber sub_twist =
       nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, [&currentTwist](const geometry_msgs::Twist::ConstPtr &msg) {
@@ -116,7 +125,7 @@ int main(int argc, char **argv) {
   ros::Publisher pub_profile = nh.advertise<nav_msgs::Path>("path", 1, true);
   pub_profile.publish(swingProfile);
 
-  ros::Rate rate(50);
+  ros::Rate rate(20);
   while (ros::ok()) {
     auto jointTraj = bodyController->getJointTrajectory(currentTwist, currentState);
     pub_traj.publish(jointTraj);
