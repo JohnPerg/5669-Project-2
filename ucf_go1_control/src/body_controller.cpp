@@ -3,6 +3,7 @@
 #include <cmath>
 using namespace ucf;
 
+// TODO get these from unitree constants
 const int kLegFL = 0;
 const int kLegFR = 1;
 const int kLegRL = 2;
@@ -214,4 +215,36 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
   }
   }
   return footPhase;
+}
+
+trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const sensor_msgs::JointState &jointState) {
+  trajectory_msgs::JointTrajectory trajMsg;
+  trajMsg.header.frame_id = "base";
+  trajMsg.header.stamp = ros::Time::now();
+  trajMsg.joint_names = {"FL_hip_joint",   "FL_thigh_joint", "FL_calf_joint",  "FR_hip_joint",
+                         "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
+                         "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
+
+  float targetPos[12] = {0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3};
+
+  for (int i = 0; i < 100; ++i) {
+    trajectory_msgs::JointTrajectoryPoint point;
+    point.positions.resize(trajMsg.joint_names.size());
+    // Time_from_start is already given by the timestamped positions
+    point.time_from_start = ros::Duration(i / 10.0);
+    // Interpolate from current joint position to desired joint position.
+    // This is a little convuluted due to joint state publisher being in different order
+    // from the robot joints & controller order
+    int j = 0;
+    for (const auto &name : jointState.name) {
+      auto it = std::find(trajMsg.joint_names.begin(), trajMsg.joint_names.end(), name);
+      if (it != trajMsg.joint_names.end()) {
+        int idx = std::distance(trajMsg.joint_names.begin(), it);
+        point.positions[idx] = (jointState.position[j] + (i / 100.0) * (targetPos[idx] - jointState.position[j]));
+        j++;
+      }
+    }
+    trajMsg.points.push_back(point);
+  }
+  return trajMsg;
 }

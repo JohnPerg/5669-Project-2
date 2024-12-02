@@ -31,17 +31,27 @@ public:
   trajectory_msgs::JointTrajectory getJointTrajectory(const geometry_msgs::Twist &twist,
                                                       const sensor_msgs::JointState &jointState);
 
+  /// @brief Generate a trajectory to move to standing position from current position
+  ///        using linear interpolation
+  /// @param jointState
+  /// @return Joint trajectory
+  trajectory_msgs::JointTrajectory getStandTrajectory(const sensor_msgs::JointState &jointState);
+
 protected:
   /// @brief Get timestamped foot positions for each leg
   /// @param twist Current velocity
   /// @param jointState Current joint state
   /// @return Array of 4 leg timestamped paths
-  std::array<PositionVelocity, 4> getFoot(const geometry_msgs::Twist &twist,
-                                           const sensor_msgs::JointState &jointState);
+  std::array<PositionVelocity, 4> getFoot(const geometry_msgs::Twist &twist, const sensor_msgs::JointState &jointState);
 
   // some gaits have faster swing phases vs contact phases. This scales them
   double scalePhase(double phase);
 
+  /// @brief Determine which phase each foot is in based on current phase, desired gait, and commanded angle
+  /// @param phase Current overall "baseline" phase
+  /// @param gait Desired gait
+  /// @param comAngle Commanded angle
+  /// @return Phase of each foot
   std::array<double, 4> phaseStateMachine(double phase, BodyController::Gait gait, geometry_msgs::Vector3 comAngle);
 
 private:

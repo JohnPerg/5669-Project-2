@@ -45,6 +45,9 @@ nav_msgs::Path makeCycloid() {
   return cycloidPath;
 }
 
+/// @brief Make a profile from a loaded csv
+/// @param parsedCsv The parsed csv file (rows, columns)
+/// @return Path, VectorTwist pair
 std::pair<nav_msgs::Path, std::vector<geometry_msgs::Twist>> makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
   nav_msgs::Path path;
   std::vector<geometry_msgs::Twist> vel;
@@ -114,9 +117,11 @@ int main(int argc, char **argv) {
         currentTwist = *msg;
       });
 
+  bool receivedState = false;
   ros::Subscriber sub_joint = nh.subscribe<sensor_msgs::JointState>(
-      "joint_state", 1, [&currentState](const sensor_msgs::JointState::ConstPtr &msg) {
+      "joint_state", 1, [&currentState, &receivedState](const sensor_msgs::JointState::ConstPtr &msg) {
         ROS_INFO_THROTTLE(1, "Joint State received.");
+        receivedState = true;
         currentState = *msg;
       });
 
@@ -126,9 +131,19 @@ int main(int argc, char **argv) {
   pub_profile.publish(swingProfile);
 
   ros::Rate rate(20);
+  bool oneShot = false;
   while (ros::ok()) {
-    auto jointTraj = bodyController->getJointTrajectory(currentTwist, currentState);
-    pub_traj.publish(jointTraj);
+    if (gait == ucf::BodyController::Gait::kStand)
+    {
+      if (receivedState && !oneShot){
+        auto jointTraj = bodyController->getStandTrajectory(currentState);
+        pub_traj.publish(jointTraj);
+        oneShot = true;
+      }
+    } else {
+      auto jointTraj = bodyController->getJointTrajectory(currentTwist, currentState);
+      pub_traj.publish(jointTraj);
+    }
     ros::spinOnce();
     rate.sleep();
   }
