@@ -70,9 +70,20 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   // TODO: Determine foot path based on twist, jointState, time, and current state machine state
 
+  const double vo = velocityProfile_[1]; // 
+  double vd = twist.linear.x; // Desired velocity magnitude
+
+  double s = vd / vo;
+   if (s <= 0) {
+    ROS_WARN("Invalid scale factor s: %f", s);
+    return footPaths; // Return early for invalid scale factor
+  }
+
+  double xs = sqrt(s); // Distance scale
+  double duration = 1 / sqrt(s); // Time scale
+
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
-  auto ts = ros::Time::now();
-  double duration = 2.0;
+  auto current_ts = ros::Time::now();
 
   const int kLookaheadSteps = 100;
 
@@ -87,7 +98,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
     int phaseIdx = min(legPhase * swingProfile_.poses.size(), swingProfile_.poses.size() - 1);
     for (int i = 0; i < kLookaheadSteps; ++i) {
       auto &pose = footPaths[legId].swingProfile.poses[i];
-      pose.header.stamp = ts + ros::Duration(duration * i / swingProfile_.poses.size());
+      pose.header.stamp = current_ts + ros::Duration(duration * i / swingProfile_.poses.size());
       pose.pose = swingProfile_.poses[phaseIdx].pose;
 
       if (!velocityProfile_.empty()) {
