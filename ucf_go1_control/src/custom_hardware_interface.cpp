@@ -1,5 +1,7 @@
 #include <hardware_interface/robot_hw.h>
-#include <hardware_interface/joint_command_interface.h>
+#include <hardware_interface/joint_state_interface.h>
+#include <hardware_interface/velocity_joint_interface.h>  // For velocity control
+#include <hardware_interface/effort_joint_interface.h>   // For effort control
 #include <ros/ros.h>
 #include <udp_client_server.h>
 
@@ -12,12 +14,14 @@ public:
 
 private:
     hardware_interface::JointStateInterface joint_state_interface_;
-    hardware_interface::PositionJointInterface position_joint_interface_;
+    hardware_interface::VelocityJointInterface velocity_joint_interface_; // Exposing velocity
+    hardware_interface::EffortJointInterface effort_joint_interface_;     // Exposing effort
 
     std::vector<double> joint_positions_;
     std::vector<double> joint_velocities_;
     std::vector<double> joint_efforts_;
-    std::vector<double> joint_commands_;
+    std::vector<double> joint_velocity_commands_;  // For velocity commands
+    std::vector<double> joint_effort_commands_;    // For effort commands
 
     // UDP communication objects
     UDPClient udp_client_;
@@ -29,11 +33,13 @@ UDPHardwareInterface::UDPHardwareInterface()
     joint_positions_.resize(NUM_JOINTS, 0.0);
     joint_velocities_.resize(NUM_JOINTS, 0.0);
     joint_efforts_.resize(NUM_JOINTS, 0.0);
-    joint_commands_.resize(NUM_JOINTS, 0.0);
+    joint_velocity_commands_.resize(NUM_JOINTS, 0.0);
+    joint_effort_commands_.resize(NUM_JOINTS, 0.0);
 }
 
 bool UDPHardwareInterface::init(ros::NodeHandle& nh) {
     for (size_t i = 0; i < NUM_JOINTS; ++i) {
+        // Register joint state interface
         hardware_interface::JointStateHandle state_handle(
             "joint_" + std::to_string(i),
             &joint_positions_[i],
@@ -41,14 +47,22 @@ bool UDPHardwareInterface::init(ros::NodeHandle& nh) {
             &joint_efforts_[i]);
         joint_state_interface_.registerHandle(state_handle);
 
-        hardware_interface::JointHandle pos_handle(
+        // Register velocity joint interface
+        hardware_interface::JointHandle velocity_handle(
             joint_state_interface_.getHandle("joint_" + std::to_string(i)),
-            &joint_commands_[i]);
-        position_joint_interface_.registerHandle(pos_handle);
+            &joint_velocity_commands_[i]);
+        velocity_joint_interface_.registerHandle(velocity_handle);
+
+        // Register effort joint interface
+        hardware_interface::JointHandle effort_handle(
+            joint_state_interface_.getHandle("joint_" + std::to_string(i)),
+            &joint_effort_commands_[i]);
+        effort_joint_interface_.registerHandle(effort_handle);
     }
 
     registerInterface(&joint_state_interface_);
-    registerInterface(&position_joint_interface_);
+    registerInterface(&velocity_joint_interface_);  // Register velocity interface
+    registerInterface(&effort_joint_interface_);    // Register effort interface
     return true;
 }
 
@@ -65,7 +79,8 @@ void UDPHardwareInterface::read() {
 }
 
 void UDPHardwareInterface::write() {
+    // Choose either velocity or effort commands to send
     udp_client_.send(
-        reinterpret_cast<const char*>(joint_commands_.data()),
-        joint_commands_.size() * sizeof(double));
+        reinterpret_cast<const char*>(joint_velocity_commands_.data()),  // Use velocity commands
+        joint_velocity_commands_.size() * sizeof(double));
 }
