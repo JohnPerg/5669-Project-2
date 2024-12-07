@@ -60,6 +60,9 @@ private:
   nav_msgs::Path swingProfile_;
   std::vector<geometry_msgs::Twist> velocityProfile_;
   double currentPhase_;
+  int legId;
+  std::array<double, 4> left_to_go_x;
+
 
   std::array<double, 4> footPhase_;
 };
