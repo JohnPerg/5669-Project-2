@@ -2,6 +2,7 @@
 #define __BODY_CONTROLLER_H__
 
 #include "geometry_msgs/Twist.h"
+#include <geometry_msgs/WrenchStamped.h>
 #include "nav_msgs/Path.h"
 #include "sensor_msgs/JointState.h"
 #include "trajectory_msgs/JointTrajectory.h"
@@ -29,7 +30,8 @@ public:
   /// @param jointState Current joint states
   /// @return Joint trajectories for 12 joints
   trajectory_msgs::JointTrajectory getJointTrajectory(const geometry_msgs::Twist &twist,
-                                                      const sensor_msgs::JointState &jointState);
+                                                      const sensor_msgs::JointState &jointState,
+                                                      const geometry_msgs::WrenchStamped footForce[4]);
 
   /// @brief Generate a trajectory to move to standing position from current position
   ///        using linear interpolation
@@ -42,7 +44,7 @@ protected:
   /// @param twist Current velocity
   /// @param jointState Current joint state
   /// @return Array of 4 leg timestamped paths
-  std::array<PositionVelocity, 4> getFoot(const geometry_msgs::Twist &twist, const sensor_msgs::JointState &jointState);
+  std::array<PositionVelocity, 4> getFoot(const geometry_msgs::Twist &twist, const sensor_msgs::JointState &jointState, const geometry_msgs::WrenchStamped footForce[4]);
 
   // some gaits have faster swing phases vs contact phases. This scales them
   double scalePhase(double phase);
@@ -52,7 +54,7 @@ protected:
   /// @param gait Desired gait
   /// @param comAngle Commanded angle
   /// @return Phase of each foot
-  std::array<double, 4> phaseStateMachine(double phase, BodyController::Gait gait, geometry_msgs::Vector3 comAngle);
+  std::array<double, 4> phaseStateMachine(double phase, BodyController::Gait gait, geometry_msgs::Vector3 comAngle, const geometry_msgs::WrenchStamped footForce[4]);
 
 private:
   QuadrupedRobot &robotModel_;

@@ -8,13 +8,18 @@
 #include <iostream>
 #include <memory>
 #include <ros/package.h>
-
+#include <unitree_legged_msgs/LowState.h>
 #include "ucf_go1_control/body_controller.h"
 #include "ucf_go1_control/csv_loader.h"
+#include <geometry_msgs/WrenchStamped.h>
+
 // Make a simple cycloidal profile for testing purposes
 // Phase should be [0,1). A complete Cycloid profile
 // and the closed base is generated over 100 total steps. 50 are in the base
 // and 50 are in the curve.
+
+// unitree_legged_msgs::LowState lowState;
+
 nav_msgs::Path makeCycloid() {
   auto ts = ros::Time::now();
   nav_msgs::Path cycloidPath{};
@@ -68,6 +73,26 @@ std::pair<nav_msgs::Path, std::vector<geometry_msgs::Twist>> makeProfileFromCsv(
     vel.push_back(twist);
   }
   return {path, vel};
+}
+
+geometry_msgs::WrenchStamped footForce[4];
+
+void FRfootCallback(const geometry_msgs::WrenchStamped& msg){
+  footForce[0].wrench.force.z = msg.wrench.force.z;
+}
+
+void FLfootCallback(const geometry_msgs::WrenchStamped& msg){
+  footForce[1].wrench.force.z = msg.wrench.force.z;
+}
+
+void BRfootCallback(const geometry_msgs::WrenchStamped& msg){
+    
+  footForce[2].wrench.force.z = msg.wrench.force.z;
+}
+
+void BLfootCallback(const geometry_msgs::WrenchStamped& msg){
+    
+  footForce[3].wrench.force.z = msg.wrench.force.z;
 }
 
 int main(int argc, char **argv) {
@@ -125,6 +150,15 @@ int main(int argc, char **argv) {
         currentState = *msg;
       });
 
+  ros::Subscriber footForce_sub[4];
+
+  footForce_sub[0] = nh.subscribe("/visual/FR_foot_contact/the_force", 1, &FRfootCallback);
+  footForce_sub[1] = nh.subscribe("/visual/FL_foot_contact/the_force", 1, &FLfootCallback);
+  footForce_sub[2] = nh.subscribe("/visual/RR_foot_contact/the_force", 1, &BRfootCallback);
+  footForce_sub[3] = nh.subscribe("/visual/RL_foot_contact/the_force", 1, &BLfootCallback);
+
+
+
   ros::Publisher pub_traj = nh.advertise<trajectory_msgs::JointTrajectory>("command", 1);
   // Publish path for debugging purposes
   ros::Publisher pub_profile = nh.advertise<nav_msgs::Path>("path", 1, true);
@@ -141,7 +175,7 @@ int main(int argc, char **argv) {
         oneShot = true;
       }
     } else {
-      auto jointTraj = bodyController->getJointTrajectory(currentTwist, currentState);
+      auto jointTraj = bodyController->getJointTrajectory(currentTwist, currentState, footForce);
       pub_traj.publish(jointTraj);
     }
     ros::spinOnce();

@@ -9,14 +9,16 @@ const int kLegFR = 1;
 const int kLegRL = 2;
 const int kLegRR = 3;
 
+//low_state_ros.footForce();
 BodyController::BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile,
                                std::vector<geometry_msgs::Twist> velocityProfile)
     : robotModel_(robotModel), gait_(gait), swingProfile_(swingProfile), currentPhase_(0.0),
       velocityProfile_(velocityProfile) {}
 
 trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geometry_msgs::Twist &twist,
-                                                                    const sensor_msgs::JointState &jointState) {
-
+                                                                    const sensor_msgs::JointState &jointState,
+                                                                    const geometry_msgs::WrenchStamped footForce[4]) {
+  
   trajectory_msgs::JointTrajectory trajMsg;
   trajMsg.header.frame_id = "base";
   trajMsg.header.stamp = ros::Time::now();
@@ -24,7 +26,7 @@ trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geomet
                          "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
                          "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
 
-  auto footPosVel = this->getFoot(twist, jointState);
+  auto footPosVel = this->getFoot(twist, jointState, footForce);
   trajMsg.points.reserve(footPosVel[0].swingProfile.poses.size());
   for (int i = 0; i < footPosVel[0].swingProfile.poses.size(); ++i) {
     Vec34 position;
@@ -64,13 +66,14 @@ trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geomet
 }
 
 std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const geometry_msgs::Twist &twist,
-                                                                        const sensor_msgs::JointState &jointState) {
-
+                                                                        const sensor_msgs::JointState &jointState,
+                                                                        const geometry_msgs::WrenchStamped footForce[4]
+                                                                        ) {
+  
   std::array<BodyController::PositionVelocity, 4> footPaths;
-
   // TODO: Determine foot path based on twist, jointState, time, and current state machine state
 
-  footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
+  footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular, footForce);
   auto ts = ros::Time::now();
   double duration = 2.0;
 
@@ -151,8 +154,15 @@ double BodyController::scalePhase(double phase) {
   }
 }
 
-std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyController::Gait gait,
-                                                        geometry_msgs::Vector3 comAngle) {
+std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyController::Gait gait, 
+                                                        geometry_msgs::Vector3 comAngle,
+                                                        const geometry_msgs::WrenchStamped footForce[4]) {
+  
+  printf("\nFR: %lf FL:%lf BR:%lf BL:%lf\n",  footForce[0].wrench.force.z, 
+                                              footForce[1].wrench.force.z, 
+                                              footForce[2].wrench.force.z,
+                                              footForce[3].wrench.force.z);
+                                              
   std::array<double, 4> footPhase;
   switch (gait) {
   case BodyController::Gait::kPassive: {
@@ -183,11 +193,11 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
 
     if (phase < 0.50) { // leans ensure stability on 3 legs
       // COM lean right
-      comAngle.x = 0.50; // these angles are currently arbitrary
+      comAngle.x = 1; // these angles are currently arbitrary
       comAngle.y = 0.50;
     } else if (phase >= 0.50) {
       // COM lean left
-      comAngle.x = -0.50; // these angles are currently arbitrary
+      comAngle.x = -1; // these angles are currently arbitrary
       comAngle.y = -0.50;
     }
     break;
