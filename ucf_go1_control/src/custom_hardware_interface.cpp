@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 #include <udp_client_server.h>
 
-class UDPHardwareInterface : public hardware_interface::RobotHW {
+class custom_hardware_interface : public hardware_interface::RobotHW {
 public:
     UDPHardwareInterface();
     bool init(ros::NodeHandle& nh);
