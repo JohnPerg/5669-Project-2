@@ -68,8 +68,6 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   std::array<BodyController::PositionVelocity, 4> footPaths;
 
-  // TODO: Determine foot path based on twist, jointState, time, and current state machine state
-
   const double vo = velocityProfile_[1]; // 
   double vd = twist.linear.x; // Desired velocity magnitude
 
@@ -78,9 +76,11 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
     ROS_WARN("Invalid scale factor s: %f", s);
     return footPaths; // Return early for invalid scale factor
   }
-
+  
   double xs = sqrt(s); // Distance scale
   double duration = 1 / sqrt(s); // Time scale
+
+  double end_x = footPaths[legId].swingProfile.poses.back().pose.position.x
 
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto current_ts = ros::Time::now();
@@ -100,6 +100,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
       auto &pose = footPaths[legId].swingProfile.poses[i];
       pose.header.stamp = current_ts + ros::Duration(duration * i / swingProfile_.poses.size());
       pose.pose = swingProfile_.poses[phaseIdx].pose;
+      double left_to_go_x = abs(end_x - pose.pose.position/x);
 
       if (!velocityProfile_.empty()) {
         auto &twist = footPaths[legId].velocityProfile[i];
@@ -187,10 +188,10 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
     break;
   }
   case BodyController::Gait::kWalk: {
-    footPhase[0] = scalePhase(fmod(phase + 0.0, 1.0));
-    footPhase[1] = scalePhase(fmod(phase + 0.5, 1.0));
-    footPhase[2] = scalePhase(fmod(phase + 0.25, 1.0));
-    footPhase[3] = scalePhase(fmod(phase + 0.75, 1.0));
+    footPhase[kLegFL] = scalePhase(fmod(phase + 0.0, left_to_go_x[0]));
+    footPhase[kLegFR] = scalePhase(fmod(phase + 0.5, left_to_go_x[1]));
+    footPhase[kLegRL] = scalePhase(fmod(phase + 0.25, left_to_go_x[2]));
+    footPhase[kLegRR] = scalePhase(fmod(phase + 0.75, left_to_go_x[3]));
 
     if (phase < 0.50) { // leans ensure stability on 3 legs
       // COM lean right
@@ -204,24 +205,24 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
     break;
   }
   case BodyController::Gait::kTrot: {
-    footPhase[kLegFL] = fmod(phase + 0.5, 1.0);
-    footPhase[kLegFR] = fmod(phase + 0.0, 1.0);
-    footPhase[kLegRL] = fmod(phase + 0.0, 1.0);
-    footPhase[kLegRR] = fmod(phase + 0.5, 1.0);
+    footPhase[kLegFL] = fmod(phase + 0.5, left_to_go_x[0]);
+    footPhase[kLegFR] = fmod(phase + 0.0, left_to_go_x[1]);
+    footPhase[kLegRL] = fmod(phase + 0.0, left_to_go_x[2]);
+    footPhase[kLegRR] = fmod(phase + 0.5, left_to_go_x[3]);
     break;
   }
   case BodyController::Gait::kCanter: {
-    footPhase[kLegFL] = fmod(phase + 0.0, 1.0);
-    footPhase[kLegFR] = fmod(phase + 0.3, 1.0);
-    footPhase[kLegRL] = fmod(phase + 0.7, 1.0);
-    footPhase[kLegRR] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegFL] = fmod(phase + 0.0, left_to_go_x[0]);
+    footPhase[kLegFR] = fmod(phase + 0.3, left_to_go_x[1]);
+    footPhase[kLegRL] = fmod(phase + 0.7, left_to_go_x[2]);
+    footPhase[kLegRR] = fmod(phase + 0.0, left_to_go_x[3]);
     break;
   }
   case BodyController::Gait::kGallop: {
-    footPhase[kLegFL] = fmod(phase + 0.0, 1.0);
-    footPhase[kLegFR] = fmod(phase + 0.1, 1.0);
-    footPhase[kLegRL] = fmod(phase + 0.6, 1.0);
-    footPhase[kLegRR] = fmod(phase + 0.5, 1.0);
+    footPhase[kLegFL] = fmod(phase + 0.0, left_to_go_x[0]);
+    footPhase[kLegFR] = fmod(phase + 0.1, left_to_go_x[1]);
+    footPhase[kLegRL] = fmod(phase + 0.6, left_to_go_x[2]);
+    footPhase[kLegRR] = fmod(phase + 0.5, left_to_go_x[3]);
     break;
   }
   }
