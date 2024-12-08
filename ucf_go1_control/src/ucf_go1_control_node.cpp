@@ -48,7 +48,8 @@ nav_msgs::Path makeCycloid() {
 /// @brief Make a profile from a loaded csv
 /// @param parsedCsv The parsed csv file (rows, columns)
 /// @return Path, VectorTwist pair
-std::pair<nav_msgs::Path, std::vector<geometry_msgs::Twist>> makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
+std::pair<nav_msgs::Path, std::vector<geometry_msgs::Twist>>
+makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
   nav_msgs::Path path;
   std::vector<geometry_msgs::Twist> vel;
   path.header.frame_id = "base";
@@ -102,10 +103,9 @@ int main(int argc, char **argv) {
     auto posVel = makeProfileFromCsv(csv);
     swingProfile = posVel.first;
     velProfile = posVel.second;
-    for (auto &pose : swingProfile.poses)
-    {
-      pose.pose.position.z+=0.15; // Shift profile upward
-      pose.pose.position.x*=1.0; // Scale the step size
+    for (auto &pose : swingProfile.poses) {
+      pose.pose.position.z += 0.15; // Shift profile upward
+      pose.pose.position.x *= 1.0;  // Scale the step size
     }
   }
 
@@ -130,13 +130,18 @@ int main(int argc, char **argv) {
   ros::Publisher pub_profile = nh.advertise<nav_msgs::Path>("path", 1, true);
   pub_profile.publish(swingProfile);
 
-  ros::Rate rate(20);
+  ros::Rate rate(10);
   bool oneShot = false;
   while (ros::ok()) {
-    if (gait == ucf::BodyController::Gait::kStand)
-    {
-      if (receivedState && !oneShot){
+    if (gait == ucf::BodyController::Gait::kStand) {
+      if (receivedState && !oneShot) {
         auto jointTraj = bodyController->getStandTrajectory(currentState);
+        pub_traj.publish(jointTraj);
+        oneShot = true;
+      }
+    } else if (gait == ucf::BodyController::Gait::kPassive) {
+      if (!oneShot) {
+        auto jointTraj = bodyController->getEmptyTrajectory();
         pub_traj.publish(jointTraj);
         oneShot = true;
       }
