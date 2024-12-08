@@ -1,4 +1,5 @@
 #include "ucf_go1_control/body_controller.h"
+#include "ros/ros.h"
 #include <algorithm>
 #include <cmath>
 using namespace ucf;
@@ -68,19 +69,22 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   std::array<BodyController::PositionVelocity, 4> footPaths;
 
-  const double vo = 0.07843; // 
-  double vd = twist.linear.x; // Desired velocity magnitude
-
+  // The first linear.x index is the velocity of the stance phase.
+  const double vo = velocityProfile_[1].linear.x;
+  // Desired velocity magnitude. Negative because foot moves backward with respect to the body to move forward
+  double vd = -twist.linear.x; 
+  ROS_INFO_THROTTLE(1, "vo: %f, vd: %f", vo, vd);
+  if (fabs(vo)<1E-6 || fabs(vd)<1E-6)
+  {
+    return footPaths;
+  }
   double s = vd / vo;
-   if (s <= 0) {
+  if (s <= 0) {
     return footPaths; // Return early for invalid scale factor
   }
-  
-  double xs = sqrt(s); // Distance scale
+
+  double xs = sqrt(s);           // Distance scale
   double duration = 1 / sqrt(s); // Time scale
-
-  double end_x = footPaths[legId].swingProfile.poses.back().pose.position.x;
-
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto current_ts = ros::Time::now();
 
@@ -99,7 +103,9 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
       auto &pose = footPaths[legId].swingProfile.poses[i];
       pose.header.stamp = current_ts + ros::Duration(duration * i / swingProfile_.poses.size());
       pose.pose = swingProfile_.poses[phaseIdx].pose;
-      double left_to_go_x = abs(end_x - pose.pose.position.x);
+      // Scale the x distance by the desired position scale. This adjusts the step length as well as the horizontal
+      // distance of the swing phase
+      pose.pose.position.x *= xs;
 
       if (!velocityProfile_.empty()) {
         auto &twist = footPaths[legId].velocityProfile[i];
@@ -187,10 +193,10 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
     break;
   }
   case BodyController::Gait::kWalk: {
-    footPhase[kLegFL] = scalePhase(fmod(phase + 0.0, left_to_go_x[0]));
-    footPhase[kLegFR] = scalePhase(fmod(phase + 0.5, left_to_go_x[1]));
-    footPhase[kLegRL] = scalePhase(fmod(phase + 0.25, left_to_go_x[2]));
-    footPhase[kLegRR] = scalePhase(fmod(phase + 0.75, left_to_go_x[3]));
+    footPhase[kLegFL] = scalePhase(fmod(phase + 0.0, 1.0));
+    footPhase[kLegFR] = scalePhase(fmod(phase + 0.5, 1.0));
+    footPhase[kLegRL] = scalePhase(fmod(phase + 0.25, 1.0));
+    footPhase[kLegRR] = scalePhase(fmod(phase + 0.75, 1.0));
 
     if (phase < 0.50) { // leans ensure stability on 3 legs
       // COM lean right
@@ -204,24 +210,24 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
     break;
   }
   case BodyController::Gait::kTrot: {
-    footPhase[kLegFL] = fmod(phase + 0.5, left_to_go_x[0]);
-    footPhase[kLegFR] = fmod(phase + 0.0, left_to_go_x[1]);
-    footPhase[kLegRL] = fmod(phase + 0.0, left_to_go_x[2]);
-    footPhase[kLegRR] = fmod(phase + 0.5, left_to_go_x[3]);
+    footPhase[kLegFL] = fmod(phase + 0.5, 1.0);
+    footPhase[kLegFR] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegRL] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegRR] = fmod(phase + 0.5, 1.0);
     break;
   }
   case BodyController::Gait::kCanter: {
-    footPhase[kLegFL] = fmod(phase + 0.0, left_to_go_x[0]);
-    footPhase[kLegFR] = fmod(phase + 0.3, left_to_go_x[1]);
-    footPhase[kLegRL] = fmod(phase + 0.7, left_to_go_x[2]);
-    footPhase[kLegRR] = fmod(phase + 0.0, left_to_go_x[3]);
+    footPhase[kLegFL] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegFR] = fmod(phase + 0.3, 1.0);
+    footPhase[kLegRL] = fmod(phase + 0.7, 1.0);
+    footPhase[kLegRR] = fmod(phase + 0.0, 1.0);
     break;
   }
   case BodyController::Gait::kGallop: {
-    footPhase[kLegFL] = fmod(phase + 0.0, left_to_go_x[0]);
-    footPhase[kLegFR] = fmod(phase + 0.1, left_to_go_x[1]);
-    footPhase[kLegRL] = fmod(phase + 0.6, left_to_go_x[2]);
-    footPhase[kLegRR] = fmod(phase + 0.5, left_to_go_x[3]);
+    footPhase[kLegFL] = fmod(phase + 0.0, 1.0);
+    footPhase[kLegFR] = fmod(phase + 0.1, 1.0);
+    footPhase[kLegRL] = fmod(phase + 0.6, 1.0);
+    footPhase[kLegRR] = fmod(phase + 0.5, 1.0);
     break;
   }
   }

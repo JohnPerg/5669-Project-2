@@ -53,18 +53,18 @@ std::pair<nav_msgs::Path, std::vector<geometry_msgs::Twist>> makeProfileFromCsv(
   std::vector<geometry_msgs::Twist> vel;
   path.header.frame_id = "base";
   for (const auto &line : parsedCsv) {
-    double Y, Z, Vy, Vz;
-    Y = std::stod(line[0]);
-    Z = std::stod(line[1]);
-    Vy = std::stod(line[2]);
-    Vz = std::stod(line[3]);
+    double X, Z, Vx, Vz;
+    Z = std::stod(line[0]);
+    X = std::stod(line[1]);
+    Vz = std::stod(line[2]);
+    Vx = std::stod(line[3]);
     geometry_msgs::PoseStamped pose{};
-    pose.pose.position.x = Z;
-    pose.pose.position.z = Y; // Y Was up in csv
+    pose.pose.position.x = X;
+    pose.pose.position.z = Z;
     path.poses.push_back(pose);
     geometry_msgs::Twist twist{};
-    twist.linear.y = Vz;
-    twist.linear.z = Vy;
+    twist.linear.x = Vx;
+    twist.linear.z = Vz;
     vel.push_back(twist);
   }
   return {path, vel};
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 
   ros::Subscriber sub_twist =
       nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, [&currentTwist](const geometry_msgs::Twist::ConstPtr &msg) {
-        ROS_INFO("Twist received x: {%f} y: {%f} yaw: {%f}", msg->linear.x, msg->linear.y, msg->angular.z);
+        ROS_INFO_THROTTLE(0.5, "Twist received x: {%f} y: {%f} yaw: {%f}", msg->linear.x, msg->linear.y, msg->angular.z);
         currentTwist = *msg;
       });
 
