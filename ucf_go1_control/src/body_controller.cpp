@@ -1,4 +1,5 @@
 #include "ucf_go1_control/body_controller.h"
+#include "ros/ros.h"
 #include <algorithm>
 #include <cmath>
 using namespace ucf;
@@ -68,11 +69,26 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   std::array<BodyController::PositionVelocity, 4> footPaths;
 
-  // TODO: Determine foot path based on twist, jointState, time, and current state machine state
-  
+
+  // The first linear.x index is the velocity of the stance phase.
+  const double vo = velocityProfile_[1].linear.x;
+  // Desired velocity magnitude. Negative because foot moves backward with respect to the body to move forward
+  double vd = -twist.linear.x; 
+  ROS_INFO_THROTTLE(1, "vo: %f, vd: %f", vo, vd);
+  if (fabs(vo)<1E-6 || fabs(vd)<1E-6)
+  {
+    return footPaths;
+  }
+  double s = vd / vo;
+  if (s <= 0) {
+    return footPaths; // Return early for invalid scale factor
+  }
+
+  double xs = sqrt(s);           // Distance scale
+  double duration = 1 / sqrt(s); // Time scale
+
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
-  auto ts = ros::Time::now();
-  double duration = 2.0;
+  auto current_ts = ros::Time::now();
 
   const int kLookaheadSteps = 100;
 
@@ -87,8 +103,11 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
     int phaseIdx = min(legPhase * swingProfile_.poses.size(), swingProfile_.poses.size() - 1);
     for (int i = 0; i < kLookaheadSteps; ++i) {
       auto &pose = footPaths[legId].swingProfile.poses[i];
-      pose.header.stamp = ts + ros::Duration(duration * i / swingProfile_.poses.size());
+      pose.header.stamp = current_ts + ros::Duration(duration * i / swingProfile_.poses.size());
       pose.pose = swingProfile_.poses[phaseIdx].pose;
+      // Scale the x distance by the desired position scale. This adjusts the step length as well as the horizontal
+      // distance of the swing phase
+      pose.pose.position.x *= xs;
 
       if (!velocityProfile_.empty()) {
         auto &twist = footPaths[legId].velocityProfile[i];
@@ -176,10 +195,10 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
     break;
   }
   case BodyController::Gait::kWalk: {
-    footPhase[0] = scalePhase(fmod(phase + 0.0, 1.0));
-    footPhase[1] = scalePhase(fmod(phase + 0.5, 1.0));
-    footPhase[2] = scalePhase(fmod(phase + 0.25, 1.0));
-    footPhase[3] = scalePhase(fmod(phase + 0.75, 1.0));
+    footPhase[kLegFL] = scalePhase(fmod(phase + 0.0, 1.0));
+    footPhase[kLegFR] = scalePhase(fmod(phase + 0.5, 1.0));
+    footPhase[kLegRL] = scalePhase(fmod(phase + 0.25, 1.0));
+    footPhase[kLegRR] = scalePhase(fmod(phase + 0.75, 1.0));
 
     if (phase < 0.50) { // leans ensure stability on 3 legs
       // COM lean right
