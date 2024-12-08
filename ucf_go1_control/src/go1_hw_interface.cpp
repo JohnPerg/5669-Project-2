@@ -53,6 +53,11 @@ void Go1HWInterface::write(ros::Duration &elapsed_time) {
   }
 
   for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id) {
+
+    joint_position_[joint_id] = state_.motorState[joint_id].q;
+    joint_velocity_[joint_id] = state_.motorState[joint_id].dq;
+    joint_effort_[joint_id] = state_.motorState[joint_id].tauEst;
+
     // cmd_.motorCmd[joint_id].q = joint_position_command_[joint_id];
     cmd_.motorCmd[joint_id].dq = joint_velocity_command_[joint_id]; // Update joint velocity
     cmd_.motorCmd[joint_id].Kp = 10;                                // Spring coefficient
