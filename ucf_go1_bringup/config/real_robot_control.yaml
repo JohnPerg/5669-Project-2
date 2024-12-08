@@ -16,34 +16,34 @@ hardware_interface:
         - RR_hip_joint
         - RR_thigh_joint
         - RR_calf_joint
-    control_mode: 0 # 0: sim, 1: real
-    power_protect: 1 # 1-10. Somehow protects power based on commands
+    control_mode: 1 # 0: sim, 1: real
+    power_protect: 3 # 1-10. Somehow protects power based on commands
     Kp:
-        - 10.0 # FL_hip_joint
-        - 10.0 # FL_thigh_joint
-        - 10.0 # FL_calf_joint
-        - 10.0 # FR_hip_joint
-        - 10.0 # FR_thigh_joint
-        - 10.0 # FR_calf_joint
-        - 10.0 # RL_hip_joint
-        - 10.0 # RL_thigh_joint
-        - 10.0 # RL_calf_joint
-        - 10.0 # RR_hip_joint
-        - 10.0 # RR_thigh_joint
-        - 10.0 # RR_calf_joint
+        - 100 # FL_hip_joint
+        - 100 # FL_thigh_joint
+        - 100 # FL_calf_joint
+        - 100 # FR_hip_joint
+        - 100 # FR_thigh_joint
+        - 100 # FR_calf_joint
+        - 100 # RL_hip_joint
+        - 100 # RL_thigh_joint
+        - 100 # RL_calf_joint
+        - 100 # RR_hip_joint
+        - 100 # RR_thigh_joint
+        - 100 # RR_calf_joint
     Kd:
-        - 10.0 # FL_hip_joint
-        - 10.0 # FL_thigh_joint
-        - 10.0 # FL_calf_joint
-        - 10.0 # FR_hip_joint
-        - 10.0 # FR_thigh_joint
-        - 10.0 # FR_calf_joint
-        - 10.0 # RL_hip_joint
-        - 10.0 # RL_thigh_joint
-        - 10.0 # RL_calf_joint
-        - 10.0 # RR_hip_joint
-        - 10.0 # RR_thigh_joint
-        - 10.0 # RR_calf_joint
+        - 2 # FL_hip_joint
+        - 2 # FL_thigh_joint
+        - 2 # FL_calf_joint
+        - 2 # FR_hip_joint
+        - 2 # FR_thigh_joint
+        - 2 # FR_calf_joint
+        - 2 # RL_hip_joint
+        - 2 # RL_thigh_joint
+        - 2 # RL_calf_joint
+        - 2 # RR_hip_joint
+        - 2 # RR_thigh_joint
+        - 2 # RR_calf_joint
 
 # Publish all joint states -----------------------------------
 joint_state_controller:
@@ -116,7 +116,7 @@ RR_calf_controller:
     pid: {p: 300.0, i: 0.0, d: 8.0}
 
 traj_controller:
-    type: velocity_controllers/JointTrajectoryController
+    type: position_controllers/JointTrajectoryController
     joints:
         - FL_hip_joint
         - FL_thigh_joint
@@ -132,18 +132,18 @@ traj_controller:
         - RR_calf_joint
         
     gains:
-        FL_hip_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        FL_thigh_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        FL_calf_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        FR_hip_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        FR_thigh_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        FR_calf_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        RL_hip_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        RL_thigh_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        RL_calf_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        RR_hip_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        RR_thigh_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
-        RR_calf_joint: {p: 10.0, d: 0.1, i: 5, i_clamp: 1}
+        FL_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        FL_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        FL_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        FR_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        FR_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        FR_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        RL_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        RL_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        RL_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        RR_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        RR_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
+        RR_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
 
     velocity_ff:
         FR_hip_joint: 1.0
