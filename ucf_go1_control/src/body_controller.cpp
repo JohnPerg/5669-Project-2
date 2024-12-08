@@ -135,12 +135,12 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
     // pose.pose.position.z += -0.3200;
   }
   for (auto &pose : footPaths[kLegRL].swingProfile.poses) {
-    pose.pose.position.x += -0.2081;
+    pose.pose.position.x += -0.2131;
     pose.pose.position.y += -0.1300;
     // pose.pose.position.z += -0.3200;
   }
   for (auto &pose : footPaths[kLegRR].swingProfile.poses) {
-    pose.pose.position.x += -0.2081;
+    pose.pose.position.x += -0.2131;
     pose.pose.position.y += 0.1300;
     // pose.pose.position.z += -0.3200;
   }

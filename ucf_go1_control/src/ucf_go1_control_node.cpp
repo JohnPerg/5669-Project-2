@@ -60,11 +60,11 @@ makeProfileFromCsv(const std::vector<std::vector<std::string>> &parsedCsv) {
     Vz = std::stod(line[2]);
     Vx = std::stod(line[3]);
     geometry_msgs::PoseStamped pose{};
-    pose.pose.position.x = X;
+    pose.pose.position.x = X * 2;
     pose.pose.position.z = Z;
     path.poses.push_back(pose);
     geometry_msgs::Twist twist{};
-    twist.linear.x = Vx;
+    twist.linear.x = Vx * 2;
     twist.linear.z = Vz;
     vel.push_back(twist);
   }
