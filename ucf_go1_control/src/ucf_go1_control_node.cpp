@@ -89,6 +89,21 @@ int main(int argc, char **argv) {
     nh.getParam("profile", profileStr);
   }
 
+  double profile_height_offset = 0.0;
+  if (nh.hasParam("profile_height_offset")) {
+    nh.getParam("profile_height_offset", profile_height_offset);
+  }
+
+  std::vector<double> stand_joint = {0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3};
+  if (nh.hasParam("stand_joint")) {
+    nh.getParam("stand_joint", stand_joint);
+  }
+
+  double trajectory_publish_rate = 10.0;
+  if (nh.hasParam("trajectory_publish_rate")) {
+    nh.getParam("trajectory_publish_rate", trajectory_publish_rate);
+  }
+
   auto robotModel = std::make_unique<Go1Robot>();
 
   geometry_msgs::Twist currentTwist;
@@ -104,16 +119,18 @@ int main(int argc, char **argv) {
     swingProfile = posVel.first;
     velProfile = posVel.second;
     for (auto &pose : swingProfile.poses) {
-      pose.pose.position.z += 0.15; // Shift profile upward
-      pose.pose.position.x *= 1.0;  // Scale the step size
+      pose.pose.position.z += profile_height_offset; // Shift profile upward
+      pose.pose.position.x *= 1.0;                   // Scale the step size
     }
   }
 
-  auto bodyController = std::make_unique<ucf::BodyController>(*robotModel, gait, swingProfile, velProfile);
+  auto bodyController =
+      std::make_unique<ucf::BodyController>(*robotModel, gait, swingProfile, velProfile, trajectory_publish_rate);
 
   ros::Subscriber sub_twist =
       nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, [&currentTwist](const geometry_msgs::Twist::ConstPtr &msg) {
-        ROS_INFO_THROTTLE(0.5, "Twist received x: {%f} y: {%f} yaw: {%f}", msg->linear.x, msg->linear.y, msg->angular.z);
+        ROS_INFO_THROTTLE(0.5, "Twist received x: {%f} y: {%f} yaw: {%f}", msg->linear.x, msg->linear.y,
+                          msg->angular.z);
         currentTwist = *msg;
       });
 
@@ -130,12 +147,12 @@ int main(int argc, char **argv) {
   ros::Publisher pub_profile = nh.advertise<nav_msgs::Path>("path", 1, true);
   pub_profile.publish(swingProfile);
 
-  ros::Rate rate(10);
+  ros::Rate rate(trajectory_publish_rate);
   bool oneShot = false;
   while (ros::ok()) {
     if (gait == ucf::BodyController::Gait::kStand) {
       if (receivedState && !oneShot) {
-        auto jointTraj = bodyController->getStandTrajectory(currentState);
+        auto jointTraj = bodyController->getStandTrajectory(stand_joint, currentState);
         pub_traj.publish(jointTraj);
         oneShot = true;
       }

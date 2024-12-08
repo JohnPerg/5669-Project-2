@@ -7,6 +7,8 @@
     <param name="gait" value="$(arg gait)" />
     <param name="profile" value="$(arg profile)" />
 
+    <rosparam file="$(find ucf_go1_bringup)/config/body_config.yaml" command="load"/>
+
     <group if="$(arg sim)">
         <remap from="/command" to="/go1_gazebo/traj_controller/command"/>
         <remap from="/joint_state" to="/go1_gazebo/joint_states"/>

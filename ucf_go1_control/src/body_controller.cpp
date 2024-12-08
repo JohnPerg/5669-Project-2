@@ -11,9 +11,9 @@ const int kLegRL = 2;
 const int kLegRR = 3;
 
 BodyController::BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile,
-                               std::vector<geometry_msgs::Twist> velocityProfile)
+                               std::vector<geometry_msgs::Twist> velocityProfile, double loop_rate)
     : robotModel_(robotModel), gait_(gait), swingProfile_(swingProfile), currentPhase_(0.0),
-      velocityProfile_(velocityProfile) {}
+      velocityProfile_(velocityProfile), loop_rate_(loop_rate) {}
 
 trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geometry_msgs::Twist &twist,
                                                                     const sensor_msgs::JointState &jointState) {
@@ -69,14 +69,12 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   std::array<BodyController::PositionVelocity, 4> footPaths;
 
-
   // The first linear.x index is the velocity of the stance phase.
   const double vo = velocityProfile_[1].linear.x;
   // Desired velocity magnitude. Negative because foot moves backward with respect to the body to move forward
-  double vd = -twist.linear.x; 
+  double vd = -twist.linear.x;
   ROS_INFO_THROTTLE(1, "vo: %f, vd: %f", vo, vd);
-  if (fabs(vo)<1E-6 || fabs(vd)<1E-6)
-  {
+  if (fabs(vo) < 1E-6 || fabs(vd) < 1E-6) {
     return footPaths;
   }
   double s = vd / vo;
@@ -123,7 +121,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
   }
   // Loop overall phase to keep it between [0,1)
   // This 20 needs to be from the publishing rate to progress phase until we track it explicitly
-  currentPhase_ = fmod(currentPhase_ + (1 / (duration * 10)), 1.0);
+  currentPhase_ = fmod(currentPhase_ + (1 / (duration * loop_rate_)), 1.0);
 
   // Shift for proper frame (rel body frame)
   for (auto &pose : footPaths[kLegFL].swingProfile.poses) {
@@ -236,7 +234,8 @@ std::array<double, 4> BodyController::phaseStateMachine(double phase, BodyContro
   return footPhase;
 }
 
-trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const sensor_msgs::JointState &jointState) {
+trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const std::vector<double> &targetPos,
+                                                                    const sensor_msgs::JointState &jointState) {
   trajectory_msgs::JointTrajectory trajMsg;
   trajMsg.header.frame_id = "base";
   trajMsg.header.stamp = ros::Time::now();
@@ -244,14 +243,13 @@ trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const sensor
                          "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
                          "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
 
-  float targetPos[12] = {0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3};
   double duration = 5.0;
   for (int i = 0; i < 100; ++i) {
     trajectory_msgs::JointTrajectoryPoint point;
     point.positions.resize(trajMsg.joint_names.size());
     point.velocities.resize(trajMsg.joint_names.size());
     // Time_from_start is already given by the timestamped positions
-    point.time_from_start = ros::Duration(duration*(i/100.0));
+    point.time_from_start = ros::Duration(duration * (i / 100.0));
     // Interpolate from current joint position to desired joint position.
     // This is a little convuluted due to joint state publisher being in different order
     // from the robot joints & controller order
@@ -262,13 +260,13 @@ trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const sensor
         int idx = std::distance(trajMsg.joint_names.begin(), it);
         double distance = targetPos[idx] - jointState.position[j];
         point.positions[idx] = (jointState.position[j] + (i / 100.0) * distance);
-        point.velocities[idx] = distance/duration;
+        point.velocities[idx] = distance / duration;
         j++;
       }
     }
     trajMsg.points.push_back(point);
   }
-  for(auto &vel : trajMsg.points.back().velocities) {
+  for (auto &vel : trajMsg.points.back().velocities) {
     vel = 0.0;
   }
   return trajMsg;

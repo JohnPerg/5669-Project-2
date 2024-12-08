@@ -16,7 +16,7 @@ hardware_interface:
         - RR_hip_joint
         - RR_thigh_joint
         - RR_calf_joint
-    control_mode: 1 # 0: sim, 1: real
+    control_mode: 0 # 0: sim, 1: real
     power_protect: 1 # 1-10. Somehow protects power based on commands
     Kp:
         - 10.0 # FL_hip_joint

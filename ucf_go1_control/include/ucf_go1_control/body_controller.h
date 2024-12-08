@@ -22,7 +22,7 @@ public:
   };
 
   BodyController(QuadrupedRobot &robotModel, Gait gait, nav_msgs::Path swingProfile,
-                 std::vector<geometry_msgs::Twist> velocityProfile = {});
+                 std::vector<geometry_msgs::Twist> velocityProfile = {}, double loop_rate = 10.0);
 
   /// @brief Calculate joint trajectory from current joint state and twist command
   /// @param twist Desired velocities
@@ -33,9 +33,10 @@ public:
 
   /// @brief Generate a trajectory to move to standing position from current position
   ///        using linear interpolation
+  /// @param targetPos Desired joint positions for standing
   /// @param jointState
   /// @return Joint trajectory
-  trajectory_msgs::JointTrajectory getStandTrajectory(const sensor_msgs::JointState &jointState);
+  trajectory_msgs::JointTrajectory getStandTrajectory(const std::vector<double> &targetPos, const sensor_msgs::JointState &jointState);
 
   /// @brief Add an empty trajectory message for "gait" 0 to clear commands
   /// @return minimal trajectory message
@@ -69,6 +70,8 @@ private:
 
 
   std::array<double, 4> footPhase_;
+
+  double loop_rate_;
 };
 } // namespace ucf
 
