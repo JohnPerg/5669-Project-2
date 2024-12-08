@@ -22,6 +22,19 @@ Go1HWInterface::Go1HWInterface(ros::NodeHandle &nh, urdf::Model *urdf_model)
     ROS_WARN_STREAM_NAMED(name_, "   power_protect: 1 # 1 to 10");
   }
 
+  // Load spring-damper config
+  error += !rosparam_shortcuts::get(name_, rpnh, "Kp", kp_);
+  if (error) {
+    ROS_WARN_STREAM_NAMED(name_, "HWInterface requires the following config in the yaml:");
+    ROS_WARN_STREAM_NAMED(name_, "   Kp: - 1.0 # Spring coefficient");
+  }
+
+  error += !rosparam_shortcuts::get(name_, rpnh, "Kd", kd_);
+  if (error) {
+    ROS_WARN_STREAM_NAMED(name_, "HWInterface requires the following config in the yaml:");
+    ROS_WARN_STREAM_NAMED(name_, "   Kd: - 1.0 # Damper coefficient");
+  }
+
   rosparam_shortcuts::shutdownIfError(name_, error);
 
   if (control_mode_ == 1) {
@@ -53,15 +66,15 @@ void Go1HWInterface::write(ros::Duration &elapsed_time) {
   }
 
   for (std::size_t joint_id = 0; joint_id < num_joints_; ++joint_id) {
-
     joint_position_[joint_id] = state_.motorState[joint_id].q;
     joint_velocity_[joint_id] = state_.motorState[joint_id].dq;
     joint_effort_[joint_id] = state_.motorState[joint_id].tauEst;
 
-    // cmd_.motorCmd[joint_id].q = joint_position_command_[joint_id];
+    cmd_.motorCmd[joint_id].mode = PMSM;
+    cmd_.motorCmd[joint_id].q = PosStopF;
     cmd_.motorCmd[joint_id].dq = joint_velocity_command_[joint_id]; // Update joint velocity
-    cmd_.motorCmd[joint_id].Kp = 10;                                // Spring coefficient
-    cmd_.motorCmd[joint_id].Kd = 4;                                 // Damper coefficient
+    cmd_.motorCmd[joint_id].Kp = kp_[joint_id]; // Spring coefficient
+    cmd_.motorCmd[joint_id].Kd = kd_[joint_id]; // Damper coefficient
     // cmd_.motorCmd[joint_id].tau = 0;
   }
   auto res = safe_.PowerProtect(cmd_, state_, power_protect_);

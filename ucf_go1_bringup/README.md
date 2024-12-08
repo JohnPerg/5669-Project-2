@@ -23,3 +23,14 @@ Launch controllers with specific gait
 ```
 roslaunch ucf_go1_bringup control.launch gait:=3 sim:=true
 ```
+
+Modify ucf_go1_bringup/real_robot_control.yaml's control_mode to 0 for testing a simple simulated interface
+```
+roslaunch ucf_go1_bringup go1_hw.launch
+roslaunch ucf_go1_bringup control.launch gait:=2
+roslaunch ucf_go1_bringup go1_debug.launch 
+```
+Modify ucf_go1_bringup/real_robot_control.yaml's control_mode to 1 for testing udp launches fine (this is the mode for on robot)
+```
+roslaunch ucf_go1_bringup go1_hw.launch
+```

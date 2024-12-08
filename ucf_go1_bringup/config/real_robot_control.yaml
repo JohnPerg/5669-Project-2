@@ -1,5 +1,5 @@
 generic_hw_control_loop:
-    loop_hz: 300
+    loop_hz: 500
     cycle_time_error_threshold: 0.01
 
 hardware_interface:
@@ -18,6 +18,32 @@ hardware_interface:
         - RR_calf_joint
     control_mode: 1 # 0: sim, 1: real
     power_protect: 1 # 1-10. Somehow protects power based on commands
+    Kp:
+        - 10.0 # FL_hip_joint
+        - 10.0 # FL_thigh_joint
+        - 10.0 # FL_calf_joint
+        - 10.0 # FR_hip_joint
+        - 10.0 # FR_thigh_joint
+        - 10.0 # FR_calf_joint
+        - 10.0 # RL_hip_joint
+        - 10.0 # RL_thigh_joint
+        - 10.0 # RL_calf_joint
+        - 10.0 # RR_hip_joint
+        - 10.0 # RR_thigh_joint
+        - 10.0 # RR_calf_joint
+    Kd:
+        - 10.0 # FL_hip_joint
+        - 10.0 # FL_thigh_joint
+        - 10.0 # FL_calf_joint
+        - 10.0 # FR_hip_joint
+        - 10.0 # FR_thigh_joint
+        - 10.0 # FR_calf_joint
+        - 10.0 # RL_hip_joint
+        - 10.0 # RL_thigh_joint
+        - 10.0 # RL_calf_joint
+        - 10.0 # RR_hip_joint
+        - 10.0 # RR_thigh_joint
+        - 10.0 # RR_calf_joint
 
 # Publish all joint states -----------------------------------
 joint_state_controller:
@@ -135,4 +161,4 @@ traj_controller:
         
 
     stop_trajectory_duration: 0.5
-    state_publish_rate:  25
+    state_publish_rate:  50
