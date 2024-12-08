@@ -10,7 +10,6 @@ project(ucf_go1_bringup)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  unitree_guide
   go1_description
 )
 

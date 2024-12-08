@@ -69,6 +69,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   std::array<BodyController::PositionVelocity, 4> footPaths;
 
+
   // The first linear.x index is the velocity of the stance phase.
   const double vo = velocityProfile_[1].linear.x;
   // Desired velocity magnitude. Negative because foot moves backward with respect to the body to move forward
@@ -85,6 +86,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
 
   double xs = sqrt(s);           // Distance scale
   double duration = 1 / sqrt(s); // Time scale
+
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto current_ts = ros::Time::now();
 
@@ -121,7 +123,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
   }
   // Loop overall phase to keep it between [0,1)
   // This 20 needs to be from the publishing rate to progress phase until we track it explicitly
-  currentPhase_ = fmod(currentPhase_ + (1 / (duration * 20)), 1.0);
+  currentPhase_ = fmod(currentPhase_ + (1 / (duration * 10)), 1.0);
 
   // Shift for proper frame (rel body frame)
   for (auto &pose : footPaths[kLegFL].swingProfile.poses) {
@@ -243,12 +245,13 @@ trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const sensor
                          "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
 
   float targetPos[12] = {0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3, 0.0, 0.67, -1.3};
-
+  double duration = 5.0;
   for (int i = 0; i < 100; ++i) {
     trajectory_msgs::JointTrajectoryPoint point;
     point.positions.resize(trajMsg.joint_names.size());
+    point.velocities.resize(trajMsg.joint_names.size());
     // Time_from_start is already given by the timestamped positions
-    point.time_from_start = ros::Duration(i / 10.0);
+    point.time_from_start = ros::Duration(duration*(i/100.0));
     // Interpolate from current joint position to desired joint position.
     // This is a little convuluted due to joint state publisher being in different order
     // from the robot joints & controller order
@@ -257,11 +260,26 @@ trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const sensor
       auto it = std::find(trajMsg.joint_names.begin(), trajMsg.joint_names.end(), name);
       if (it != trajMsg.joint_names.end()) {
         int idx = std::distance(trajMsg.joint_names.begin(), it);
-        point.positions[idx] = (jointState.position[j] + (i / 100.0) * (targetPos[idx] - jointState.position[j]));
+        double distance = targetPos[idx] - jointState.position[j];
+        point.positions[idx] = (jointState.position[j] + (i / 100.0) * distance);
+        point.velocities[idx] = distance/duration;
         j++;
       }
     }
     trajMsg.points.push_back(point);
   }
+  for(auto &vel : trajMsg.points.back().velocities) {
+    vel = 0.0;
+  }
+  return trajMsg;
+}
+
+trajectory_msgs::JointTrajectory BodyController::getEmptyTrajectory() {
+  trajectory_msgs::JointTrajectory trajMsg;
+  trajMsg.header.frame_id = "base";
+  trajMsg.header.stamp = ros::Time::now();
+  trajMsg.joint_names = {"FL_hip_joint",   "FL_thigh_joint", "FL_calf_joint",  "FR_hip_joint",
+                         "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
+                         "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
   return trajMsg;
 }

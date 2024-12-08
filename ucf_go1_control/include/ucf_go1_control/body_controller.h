@@ -37,6 +37,10 @@ public:
   /// @return Joint trajectory
   trajectory_msgs::JointTrajectory getStandTrajectory(const sensor_msgs::JointState &jointState);
 
+  /// @brief Add an empty trajectory message for "gait" 0 to clear commands
+  /// @return minimal trajectory message
+  trajectory_msgs::JointTrajectory getEmptyTrajectory();
+
 protected:
   /// @brief Get timestamped foot positions for each leg
   /// @param twist Current velocity
