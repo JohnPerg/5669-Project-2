@@ -21,9 +21,9 @@ trajectory_msgs::JointTrajectory BodyController::getJointTrajectory(const geomet
   trajectory_msgs::JointTrajectory trajMsg;
   trajMsg.header.frame_id = "base";
   trajMsg.header.stamp = ros::Time::now();
-  trajMsg.joint_names = {"FL_hip_joint",   "FL_thigh_joint", "FL_calf_joint",  "FR_hip_joint",
-                         "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
-                         "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
+  trajMsg.joint_names = {"FR_hip_joint",   "FR_thigh_joint", "FR_calf_joint",  "FL_hip_joint",
+                         "FL_thigh_joint", "FL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint",
+                         "RR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint", "RL_calf_joint"};
 
   auto footPosVel = this->getFoot(twist, jointState);
   trajMsg.points.reserve(footPosVel[0].swingProfile.poses.size());
@@ -88,7 +88,7 @@ std::array<BodyController::PositionVelocity, 4> BodyController::getFoot(const ge
   footPhase_ = phaseStateMachine(currentPhase_, gait_, twist.angular);
   auto current_ts = ros::Time::now();
 
-  const int kLookaheadSteps = 100;
+  const int kLookaheadSteps = 150;
 
   for (int legId = 0; legId < footPhase_.size(); ++legId) {
     double legPhase = footPhase_[legId];
@@ -239,9 +239,9 @@ trajectory_msgs::JointTrajectory BodyController::getStandTrajectory(const std::v
   trajectory_msgs::JointTrajectory trajMsg;
   trajMsg.header.frame_id = "base";
   trajMsg.header.stamp = ros::Time::now();
-  trajMsg.joint_names = {"FL_hip_joint",   "FL_thigh_joint", "FL_calf_joint",  "FR_hip_joint",
-                         "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
-                         "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
+  trajMsg.joint_names = {"FR_hip_joint",   "FR_thigh_joint", "FR_calf_joint",  "FL_hip_joint",
+                         "FL_thigh_joint", "FL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint",
+                         "RR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint", "RL_calf_joint"};
 
   double duration = 5.0;
   for (int i = 0; i < 100; ++i) {
@@ -276,8 +276,8 @@ trajectory_msgs::JointTrajectory BodyController::getEmptyTrajectory() {
   trajectory_msgs::JointTrajectory trajMsg;
   trajMsg.header.frame_id = "base";
   trajMsg.header.stamp = ros::Time::now();
-  trajMsg.joint_names = {"FL_hip_joint",   "FL_thigh_joint", "FL_calf_joint",  "FR_hip_joint",
-                         "FR_thigh_joint", "FR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint",
-                         "RL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint", "RR_calf_joint"};
+  trajMsg.joint_names = {"FR_hip_joint",   "FR_thigh_joint", "FR_calf_joint",  "FL_hip_joint",
+                         "FL_thigh_joint", "FL_calf_joint",  "RR_hip_joint",   "RR_thigh_joint",
+                         "RR_calf_joint",  "RL_hip_joint",   "RL_thigh_joint", "RL_calf_joint"};
   return trajMsg;
 }
