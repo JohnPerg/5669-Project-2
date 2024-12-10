@@ -71,18 +71,11 @@ void Go1HWInterface::write(ros::Duration &elapsed_time) {
     joint_effort_[joint_id] = state_.motorState[joint_id].tauEst;
 
     cmd_.motorCmd[joint_id].mode = PMSM;
-<<<<<<< Updated upstream
-    // cmd_.motorCmd[joint_id].q = PosStopF;
-    // cmd_.motorCmd[joint_id].dq = joint_velocity_command_[joint_id]; // Update joint velocity
-        cmd_.motorCmd[joint_id].q = joint_position_command_[joint_id];
-    cmd_.motorCmd[joint_id].dq = 0; // Update joint velocity
-=======
     cmd_.motorCmd[joint_id].q = PosStopF;
     cmd_.motorCmd[joint_id].dq = joint_velocity_command_[joint_id];
->>>>>>> Stashed changes
     cmd_.motorCmd[joint_id].Kp = kp_[joint_id]; // Spring coefficient
     cmd_.motorCmd[joint_id].Kd = kd_[joint_id]; // Damper coefficient
-    // cmd_.motorCmd[joint_id].tau = 0;
+    cmd_.motorCmd[joint_id].tau = 0;
   }
   auto res = safe_.PowerProtect(cmd_, state_, power_protect_);
   if (res < 0) {
@@ -95,13 +88,8 @@ void Go1HWInterface::write(ros::Duration &elapsed_time) {
 }
 
 void Go1HWInterface::enforceLimits(ros::Duration &period) {
-<<<<<<< Updated upstream
-  pos_jnt_sat_interface_.enforceLimits(period);
-  // vel_jnt_sat_interface_.enforceLimits(period);
-=======
   //pos_jnt_sat_interface_.enforceLimits(period);
   vel_jnt_sat_interface_.enforceLimits(period);
->>>>>>> Stashed changes
   // vel_jnt_soft_limits_.enforceLimits(period);
 }
 

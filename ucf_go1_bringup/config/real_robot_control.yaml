@@ -1,5 +1,5 @@
 generic_hw_control_loop:
-    loop_hz: 500
+    loop_hz: 100
     cycle_time_error_threshold: 0.01
 
 hardware_interface:
@@ -13,27 +13,10 @@ hardware_interface:
         - RR_hip_joint
         - RR_thigh_joint
         - RR_calf_joint
-<<<<<<< Updated upstream
-    control_mode: 1 # 0: sim, 1: real
-    power_protect: 3 # 1-10. Somehow protects power based on commands
-    Kp:
-        - 100 # FL_hip_joint
-        - 100 # FL_thigh_joint
-        - 100 # FL_calf_joint
-        - 100 # FR_hip_joint
-        - 100 # FR_thigh_joint
-        - 100 # FR_calf_joint
-        - 100 # RL_hip_joint
-        - 100 # RL_thigh_joint
-        - 100 # RL_calf_joint
-        - 100 # RR_hip_joint
-        - 100 # RR_thigh_joint
-        - 100 # RR_calf_joint
-=======
         - RL_hip_joint
         - RL_thigh_joint
         - RL_calf_joint
-    control_mode: 1 # 0: sim, 1: real
+    control_mode: 0 # 0: sim, 1: real
     power_protect: 3 # 1-10. Somehow protects power based on commands
     Kp:
         - 60 # FL_hip_joint
@@ -48,7 +31,6 @@ hardware_interface:
         - 90 # RR_hip_joint
         - 90 # RR_thigh_joint
         - 90 # RR_calf_joint
->>>>>>> Stashed changes
     Kd:
         - 2 # FL_hip_joint
         - 2 # FL_thigh_joint
@@ -150,34 +132,6 @@ traj_controller:
         - RR_calf_joint
         
     gains:
-<<<<<<< Updated upstream
-        FL_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        FL_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        FL_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        FR_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        FR_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        FR_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        RL_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        RL_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        RL_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        RR_hip_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        RR_thigh_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-        RR_calf_joint: {p: 20.0, d: 0.1, i: 5, i_clamp: 1}
-
-    velocity_ff:
-        FR_hip_joint: 1.0
-        FR_thigh_joint: 1.0
-        FR_calf_joint: 1.0
-        FL_hip_joint: 1.0
-        FL_thigh_joint: 1.0
-        FL_calf_joint: 1.0
-        RR_hip_joint: 1.0
-        RR_thigh_joint: 1.0
-        RR_calf_joint: 1.0
-        RL_hip_joint: 1.0
-        RL_thigh_joint: 1.0
-        RL_calf_joint: 1.0
-=======
         FR_hip_joint: {p: 20.0, d: 0, i: 0, i_clamp: 1}
         FR_thigh_joint: {p: 20.0, d: 0, i: 0, i_clamp: 1}
         FR_calf_joint: {p: 20.0, d: 0, i: 0, i_clamp: 1}
@@ -204,7 +158,6 @@ traj_controller:
         RL_hip_joint: 1
         RL_thigh_joint: 1
         RL_calf_joint: 1
->>>>>>> Stashed changes
         
 
     stop_trajectory_duration: 0.5
